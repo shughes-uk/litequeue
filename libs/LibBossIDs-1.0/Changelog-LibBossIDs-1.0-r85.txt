@@ -1,0 +1,21 @@
+------------------------------------------------------------------------
+r85 | stanzilla | 2013-04-29 23:25:06 +0000 (Mon, 29 Apr 2013) | 1 line
+Changed paths:
+   M /trunk/LibBossIDs-1.0.lua
+
+random fixes
+------------------------------------------------------------------------
+r84 | talyrius | 2013-04-13 01:03:13 +0000 (Sat, 13 Apr 2013) | 1 line
+Changed paths:
+   M /trunk/LibBossIDs-1.0.lua
+
+- Ra-den <Fallen Keeper of Storms>
+------------------------------------------------------------------------
+r83 | talyrius | 2013-03-05 20:13:09 +0000 (Tue, 05 Mar 2013) | 2 lines
+Changed paths:
+   M /trunk/LibBossIDs-1.0.lua
+   M /trunk/LibBossIDs-1.0.toc
+
+- Patch 5.2: The Thunder King
+- Nalak and Oondasta (World Bosses)
+------------------------------------------------------------------------
