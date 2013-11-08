@@ -4427,13 +4427,6 @@ function oq.reset_button( f )
   f._is_big = nil ;
 end
 
-function oq.on_leave_queue( ndx )
-  StaticPopup_Hide("OQ_QueuePoppedMember") ;
-
-  -- this may require hardware event
-  oq.battleground_leave( tonumber(ndx) ) ; 
-end
-
 function oq.quit_raid() 
   if (not _inside_bg) then
     local dialog = StaticPopup_Show("OQ_QuitRaidConfirm") ;
@@ -8314,9 +8307,6 @@ function oq.on_invite_group_lead( req_token, group_id, raid_name, raid_leader_cl
   -- activate in-raid only procs
   oq.procs_join_raid() ;
   
-  -- make sure i'm not queue'd
-  oq.battleground_leave( 1 ) ;
-  oq.battleground_leave( 2 ) ;  
 
   my_group             = group_id ;
   my_slot              = 1 ;
@@ -8695,10 +8685,6 @@ function oq.on_invite_group( req_token, group_id, slot, raid_name, raid_leader_c
   -- activate in-raid only procs
   oq.procs_join_raid() ;
 
-  -- make sure i'm not queue'd
-  oq.battleground_leave( 1 ) ;
-  oq.battleground_leave( 2 ) ;  
-  
   raid_name  = oq.decode_name( raid_name ) ;
   raid_notes = oq.decode_note( raid_notes ) ;
   
@@ -11382,7 +11368,6 @@ function oq.procs_init()
   oq.proc[ "join"               ] = oq.on_join ;
   oq.proc[ "leave"              ] = oq.on_leave ;
   oq.proc[ "leave_slot"         ] = oq.on_leave_slot ;
-  oq.proc[ "leave_queue"        ] = oq.on_leave_queue ;
   oq.proc[ "leave_waitlist"     ] = oq.on_leave_waitlist ;  
   oq.proc[ "mbox_bn_enable"     ] = oq.on_mbox_bn_enable ;
   oq.proc[ "member"             ] = oq.on_member ;
@@ -11438,7 +11423,6 @@ function oq.procs_join_raid()
   oq.proc[ "lag_times"          ] = oq.on_lag_times ;
   oq.proc[ "leave"              ] = oq.on_leave ;
   oq.proc[ "leave_slot"         ] = oq.on_leave_slot ;
-  oq.proc[ "leave_queue"        ] = oq.on_leave_queue ;
   oq.proc[ "member"             ] = oq.on_member ;
   oq.proc[ "name"               ] = oq.on_name ;
   oq.proc[ "need_btag"          ] = oq.on_need_btag ;
@@ -11475,7 +11459,6 @@ function oq.procs_no_raid()
   oq.proc[ "lag_times"          ] = nil ;
   oq.proc[ "leave"              ] = nil ;
   oq.proc[ "leave_group"        ] = nil ;
-  oq.proc[ "leave_queue"        ] = nil ;
   oq.proc[ "member"             ] = nil ;
   oq.proc[ "name"               ] = nil ;
   oq.proc[ "need_btag"          ] = nil ;
