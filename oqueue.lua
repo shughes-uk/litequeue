@@ -2048,7 +2048,6 @@ function oq.raid_create()
   oq.ui_raidleader() ;
 
   oq.set_group_lead( 1, player_name, player_realm, player_class, player_realid ) ;
---  oq.set_charm( my_group, my_slot, OQ.ICON_SKULL ) ; -- initial charm puts 'skull' on leader
   oq.raid.group[1].member[1].resil  = player_resil ;
   oq.raid.group[1].member[1].ilevel = player_ilevel ;
   oq.raid.group[1].member[1].level  = player_level ;
@@ -4710,14 +4709,12 @@ function oq.find_first_available_group( p )
     -- check to see if player already assigned a slot
     for i=1,8 do
       if ((oq.raid.group[i].member[1].name == p.name) and (oq.raid.group[i].member[1].realm == p.realm)) then
-        oq.group_charm_clear( i )
         return i ;
       end
     end
   end
   for i=1,8 do
     if ((oq.raid.group[i].member[1].name == nil) or (oq.raid.group[i].member[1].name == "-")) then
-        oq.group_charm_clear( i )
       return i ;
     end
   end
@@ -5209,8 +5206,6 @@ function oq.on_classdot_menu_select( g_id, slot, action )
     oq.karma_vote( g_id, slot, -1 ) ;
   elseif (action == "kick") then
     oq.remove_member( g_id, slot ) ;
-  elseif (type(action) == "number") then
-    oq.leader_set_charm( g_id, slot, action ) ;
   end
 end
 
@@ -5335,12 +5330,6 @@ function oq.create_class_dot( parent, x, y, cx, cy )
   f.role:SetPoint("BOTTOMRIGHT", f,"BOTTOMRIGHT", 4, -4) ;
   f.role:SetTexture( nil ) ;
   
-  -- lucky charm
-  f.charm = f:CreateTexture(n .. "Charm", "OVERLAY" ) ;
-  f.charm:SetPoint("TOPLEFT", f,"TOPLEFT", -3, 3 ) ;
-  f.charm:SetPoint("BOTTOMRIGHT", f,"BOTTOMRIGHT", -15, 15) ;
-  f.charm:SetTexture( nil ) ;
-
   -- add tooltip event handler 
   --
   f:SetScript("OnEnter", function(self, ...) oq.on_classdot_enter(self) ; end ) ;
@@ -5391,12 +5380,6 @@ function oq.create_dungeon_dot( parent, x, y, cx, cy )
   f.role:SetPoint("BOTTOMRIGHT", f,"BOTTOMLEFT", 17, -4) ;
   f.role:SetTexture( nil ) ;
   
-  -- lucky charm
-  f.charm = f:CreateTexture(n .. "Charm", "OVERLAY" ) ;
-  f.charm:SetPoint("TOPLEFT", f,"BOTTOMLEFT", 19, 14) ;
-  f.charm:SetPoint("BOTTOMRIGHT", f,"BOTTOMLEFT", 35, -2) ;
-  f.charm:SetTexture( nil ) ;
-
   -- add tooltip event handler 
   --
   f:SetScript("OnEnter", function(self, ...) oq.on_classdot_enter(self) ; end ) ;
@@ -5446,11 +5429,6 @@ function oq.create_challenge_dot( parent, x, y, cx, cy )
   f.role:SetPoint("BOTTOMRIGHT", f,"BOTTOMLEFT", 17, -4) ;
   f.role:SetTexture( nil ) ;
   
-  -- lucky charm
-  f.charm = f:CreateTexture(n .. "Charm", "OVERLAY" ) ;
-  f.charm:SetPoint("TOPLEFT", f,"BOTTOMLEFT", 19, 14) ;
-  f.charm:SetPoint("BOTTOMRIGHT", f,"BOTTOMLEFT", 35, -2) ;
-  f.charm:SetTexture( nil ) ;
 
   -- add tooltip event handler 
   --
@@ -10453,7 +10431,6 @@ function oq.decode_stats2( name, realm, s, force_it )
   if ((g_id ~= my_group) or (slot ~= my_slot)) then
     m.flags     = oq.decode_mime64_digits( s:sub( 7, 7) ) ;
     m.check     = oq.decode_mime64_digits( s:sub( 8, 8) ) ;
-    oq.set_charm( g_id, slot, oq.decode_mime64_digits( s:sub( 9, 9) )) ;
   end
   oq.set_role ( g_id, slot, oq.decode_mime64_digits( s:sub(12,12) )) ;
 
