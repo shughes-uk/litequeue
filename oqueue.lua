@@ -244,14 +244,6 @@ end
 -------------------------------------------------------------------------------
 oq.old_bncustommsg        = nil ;
 oq.old_bn_msg             = nil ;
-oq.WhoPoppedList_Ids = 
-{
-  [ 2825] = "Bloodlust",
-  [32182] = "Heroism",
-  [80353] = "Time Warp",
-  [90355] = "Ancient Hysteria",
-} ;
-
 
 OQ.CHK_VLIST_TM     = 15 ;
 
@@ -397,18 +389,6 @@ SlashCmdList["OQUEUE"] = function (msg, editbox)
   end
 end
 
-SLASH_BOUNTY1 = '/bounty' ;
-SLASH_BOUNTY2 = '/bb' ;
-SlashCmdList["BOUNTY"] = function (msg, editbox)
-  oq.toggle_bounty_board() ;
-end
-
-SLASH_OQLOG1 = '/oqlog' ;
-SLASH_OQLOG2 = '/log' ;
-SlashCmdList["OQLOG"] = function (msg, editbox)
-  oq.toggle_log() ;
-end
-
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
 oq.options = {} ;
@@ -416,22 +396,16 @@ function oq.hook_options()
   oq.options[ "?"           ] = oq.usage ; 
   oq.options[ "adds"        ] = oq.show_adds ;
   oq.options[ "ban"         ] = oq.ban_user ;
-  oq.options[ "blam"        ] = oq.blam ;
-  oq.options[ "j2tw"        ] = oq.j2tw_now ;
   oq.options[ "bnclear"     ] = oq.bn_clear ; 
-  oq.options[ "brb"         ] = oq.brb ;
-  oq.options[ "cb"          ] = oq.color_blind_mode ;
   oq.options[ "check"       ] = oq.bn_force_verify ;
   oq.options[ "cp"          ] = oq.toggle_class_portraits ;
   oq.options[ "debug"       ] = oq.debug_toggle ;
-  oq.options[ "dip"         ] = oq.dip ; 
   oq.options[ "dg"          ] = oq.leave_party ;  -- drop group
   oq.options[ "dp"          ] = oq.leave_party ;  -- drop party
   oq.options[ "fixui"       ] = oq.reposition_ui ;  
   oq.options[ "godark"      ] = oq.godark ;
   oq.options[ "harddrop"    ] = oq.harddrop ; 
   oq.options[ "help"        ] = oq.usage ; 
-  oq.options[ "id"          ] = oq.id_target ; 
   oq.options[ "lust"        ] = oq.last_lust ;   
   oq.options[ "mbsync"      ] = oq.mbsync ;
   oq.options[ "mycrew"      ] = oq.mycrew ;
@@ -443,14 +417,12 @@ function oq.hook_options()
   oq.options[ "on"          ] = oq.oq_on ;
   oq.options[ "pending"     ] = oq.bn_show_pending ;
   oq.options[ "ping"        ] = oq.ping_toon ;
-  oq.options[ "pos"         ] = oq.where_am_i ;
   oq.options[ "purge"       ] = oq.remove_OQadded_bn_friends ;
   oq.options[ "rage"        ] = oq.report_rage ;
   oq.options[ "rc"          ] = oq.start_role_check ;
   oq.options[ "refresh"     ] = oq.raid_find ;
   oq.options[ "reset"       ] = oq.data_reset ;
   oq.options[ "show"        ] = oq.show_data ;
-  oq.options[ "datestamp"   ] = oq.toggle_datestamp ;
   oq.options[ "spy"         ] = oq.battleground_spy ;
   oq.options[ "stats"       ] = oq.dump_statistics ;
   oq.options[ "threat"      ] = oq.toggle_threat_level ;  
@@ -469,18 +441,6 @@ oq.req_karma("player") ;
   
 end
 
-local bg_points = { [1] = "AB"  ,
-                    [2] = "AV"  ,
-                    [3] = "BFG" ,
-                    [4] = "EotS",
-                    [5] = "IoC" ,
-                    [6] = "SotA",
-                    [7] = "TP"  ,
-                    [8] = "WSG" ,
-                    [9] = "SSM" ;
-                    [10] = "ToK" ;
-                    [11] = "DWG" ;
-                  } ;
 
 function oq.toggle_mini()
   if (OQ_MinimapButton:IsVisible()) then
@@ -491,685 +451,6 @@ function oq.toggle_mini()
     OQ_MinimapButton:Show() ;
     OQ_toon.mini_hide = nil ;
     print( OQ.MINIMAP_SHOWN ) ;
-  end
-end
-
-local function comma_value(n) -- credit http://richard.warburton.it
-  if (n == nil) then
-    n = 0 ;
-  end
-  local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
-  return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
-end
-
-function oq.toggle_datestamp()
-  if (OQ_data._show_datestamp) and (OQ_data._show_datestamp == 1) then
-    OQ_data._show_datestamp = 0 ;
-    oq.tab4_now:Hide() ;
-    print( "date stamp: OFF" ) ;
-  else
-    OQ_data._show_datestamp = 1 ;
-    oq.tab4_now:Show() ;
-    print( "date stamp: ON" ) ;
-  end
-end
-
-function oq.id_target()
-  local target = "target" ;
-  local guid = UnitGUID(target) ;
-  if (guid == nil) then
-    target = "player" ;
-    guid = UnitGUID(target) ;
-  end
-
-  local id = tonumber(guid:sub(6,10),16) ; 
-  if (id ~= 0) then
-    print( "(".. guid ..")  id: ".. comma_value(id) .."  ".. UnitName(target) ) ;
-  else
-    id = tonumber(guid:sub(-7,-1),16) ; 
-    print( "(".. guid ..")  ".. UnitName(target) .."  player_id: ".. comma_value(id) ) ;
-  end
-end
-
-function oq.basic_compare( a, b )
-  if (a == nil) then
-    return false ;
-  elseif (b == nil) then
-    return true ;
-  end
-  return (a < b) ;
-end
-
-
-function oq.toggle_timers()
-  if (OQ_data.timer_show == nil) or (OQ_data.timer_show == 1) then
-    oq.utimer_frame():Hide() ;
-    OQ_data.timer_show = 0 ;
-  else
-    oq.utimer_frame():Show() ;
-    OQ_data.timer_show = 1 ;
-  end
-end
-
-function oq.utimer_frame_transit( self, flag )
-  if (flag) then
-    self.texture:SetTexture( 0.1, 0.1, 0.1 ) ;
-    self.label  :Show() ;
-    self.closepb:Show() ;
-  else
-    local f = GetMouseFocus() ;
-    if (f ~= self.closepb) then
-      self.texture:SetTexture( nil ) ;
-      self.label  :Hide() ;
-      self.closepb:Hide() ;
-    end
-  end
-end
-
-function oq.utimer_set_width( w ) 
-  if (w == nil) or (w < 30) then
-    return ;
-  end
-  local ut = oq.utimer_frame() ;
-  ut:SetWidth( w ) ;
-  ut:SetPoint( "TOPLEFT", UIParent, "BOTTOMLEFT", ut:GetLeft(), ut:GetTop() ) ;
-  ut.texture:SetWidth( w ) ;
-  for i,v in pairs(oq._utimers) do
-    if (v._start ~= 0) and (v:IsVisible()) then
-      v:set_width( w ) ;
-    end
-  end
-end
-
-function oq.utimer_frame()
-  if (oq._utimer_frame ~= nil) then
-    return oq._utimer_frame ;
-  end
-  local d = oq.CreateFrame("FRAME", "OQUserTimerFrame", UIParent ) ;
-  d:SetBackdropColor(0.6,0.6,0.6,1.0) ;
-  d:SetScript("OnEnter" , function(self, ...) oq.utimer_frame_transit( self,   1 ) ; end ) ;
-  d:SetScript("OnLeave" , function(self, ...) oq.utimer_frame_transit( self, nil ) ; end ) ;
-
-  oq.setpos( d, 300, 300, OQ_data.timer_width or 200, 200 ) ;
-  local t = d:CreateTexture( nil, "BACKGROUND" ) ;
-  t:SetTexture( nil ) ;
-  t:SetPoint( "TOPLEFT"    , d, "TOPLEFT" , 16,   0 ) ;
-  t:SetPoint( "BOTTOMRIGHT", d, "TOPRIGHT",  0, -18 ) ;
-  t:SetAlpha( 0.8 ) ;
-  d.texture = t ;
-
-  d.label = oq.label( d, 0, 0, d:GetWidth()-(2*5+16), d:GetHeight() - 2*2, "timers", "TOP", "LEFT" ) ; 
-  d.label:SetPoint("TOPLEFT", d, "TOPLEFT", 5+16, -4 ) ;
-  d.label:SetTextColor( 1,1,1 ) ;
-  
-  oq.make_frame_moveable( d ) ;
-  d.closepb = oq.closebox( d, function(self) self:GetParent():Hide() ; OQ_data.timer_show = 0 ; end ) ;
-  d.closepb:SetPoint("TOPRIGHT", d, "TOPRIGHT", 3, 3 ) ;
-  d._save_position = function(self) 
-                       OQ_data.utimer_x = max(0,floor(self:GetLeft())) ; 
-                       OQ_data.utimer_y = max(0,floor(self:GetTop())) ; 
-                     end ;
-  d:Hide() ; -- require caller to explicitly show it
-
-  if (OQ_data.utimer_x or OQ_data.utimer_y) then
-    d:SetPoint( "TOPLEFT", UIParent, "BOTTOMLEFT", OQ_data.utimer_x, OQ_data.utimer_y ) ;
-  end
-  oq._utimer_frame = d ;
-  oq.utimer_frame_transit( d, nil ) ; -- hide certain bits
-  return oq._utimer_frame ;
-end
-
-function oq.utimer_done( self )
-  self:Hide() ;
-  self._start   = 0 ;
-  self._end     = 0 ;
-  self._trigger = nil ;
-  self._type    = 1 ;
-  oq.utimer_shuffle() ;
-end
-
-function oq.utimer_update( bar ) 
-  if (bar._type == 1) then
-    return oq.utimer_countdown_update( bar ) ;
-  end
-  if (bar._type == 2) then
-    return oq.utimer_countup_update( bar ) 
-  end
-  if (bar._type == 3) then
-    return oq.utimer_cycle_update( bar ) 
-  end
-  if (bar._type == 4) then
-    return oq.utimer_node_update( bar ) 
-  end
-  if (bar._type == 5) then
-    return oq.utimer_normal_update( bar ) 
-  end
-end
-
-function oq.utimer_reset_cycle( name ) 
-  if (name == nil) then
-    return nil ;
-  end
-  for i,v in pairs(oq._utimers) do
-    if (v.label:GetText() == name) and (v._type == 3) then
-      v._start = GetTime() ;
-      v._end   = v._start + v._tm ;
-      if (v._last_reset_tm) then
-        local dt = (v._start - v._last_reset_tm) ;
-        if (dt > 1) then
-          v._last_cyle_length = dt ;
-          print( "(".. name ..") res cycle length: ".. dt ) ;
-        end
-      end
-      v._last_reset_tm = _start ;
-      return v ;
-    end
-  end
-  return nil ;
-end
-
--- static bar (used to represent a controlled node)
-function oq.utimer_node_update( bar ) 
-  if (bar._start == 0) then
-    return ;
-  end
-  
-  local now = GetTime() ;
-  local dt = (now - bar._start) ; -- how long it's been held
-  local width = floor(bar.backdrop:GetWidth()+1) ;
-  bar.texture:SetPoint( "TOPRIGHT", bar, "TOPRIGHT",  0, 0 ) ;
-  if (bar._notime) then
-    bar.time:SetText( "" ) ;
-  else
-    bar.time:SetText( floor(dt/60) ..":".. string.format( "%02d", floor(dt % 60)) ) ;
-  end
-  if (bar._count) then
-    bar.count:SetText( tostring(bar._count) .."x" ) ;
-  else
-    bar.count:SetText( "" ) ;
-  end
-end
-
-function oq.utimer_normal_update( bar ) 
-  local now = GetTime() ;
-  local dt = (now - bar._start) ; -- how long it's been held
-  local width = floor(bar.backdrop:GetWidth()+1) ;
-  bar.texture:SetPoint( "TOPRIGHT", bar, "TOPRIGHT",  0, 0 ) ;
-  bar.time:SetText( "" ) ;
-  if (bar._count) then
-    bar.count:SetText( tostring(bar._count) .."x" ) ;
-  else
-    bar.count:SetText( "" ) ;
-  end
-end
-
-function oq.utimer_cycle_update( bar ) 
-  if (bar._start == 0) then
-    return ;
-  end
-  
-  local now = GetTime() ;
-  if (bar._end < now) then
-    -- timer ended
-    if (bar._trigger) then
-      bar._trigger( bar, now ) ;
-    end
-    -- reset timer data for reuse and shuffle remaining
-    bar._start = GetTime() ;
-    bar._end   = bar._start + bar._tm ;
-    return ;
-  end
-
-  local dt = (bar._end - now) ;
-  local tm = (bar._end - bar._start) ;
-  local width = floor(bar.backdrop:GetWidth()+1) ;
-  if (tm == 0) then
-    return ;
-  end
-  bar.texture:SetPoint( "TOPRIGHT", bar, "TOPRIGHT",  -1* width * (dt / tm), 0 ) ;
-  bar.time:SetText( floor(dt/60) ..":".. string.format( "%02d", floor(dt % 60)) ) ;
-  if (bar._count) then
-    bar.count:SetText( tostring(bar._count or 0) .."x" ) ;
-  else
-    bar.count:SetText( "" ) ;
-  end
-  if (bar._dead) then
-    bar.ressers:SetText( "(".. tostring(bar._dead or 0) ..")" ) ;
-  else
-    bar.ressers:SetText( "" ) ;
-  end
-end
-
-function oq.utimer_countup_update( bar ) 
-  if (bar._start == 0) then
-    return ;
-  end
-  
-  local now = GetTime() ;
-  if (bar._end < now) then
-    -- timer ended
-    if (bar._trigger) then
-      bar._trigger( bar, now ) ;
-    end
-    -- reset timer data for reuse and shuffle remaining
-    oq.utimer_done( bar ) ;
-    return ;
-  end
-
-  local dt = (bar._end - now) ;
-  local tm = (bar._end - bar._start) ;
-  local width = floor(bar.backdrop:GetWidth()+1) ;
-  if (tm == 0) then
-    return ;
-  end
-  bar.texture:SetPoint( "TOPRIGHT", bar, "TOPRIGHT",  -1* width * (dt / tm), 0 ) ;
-  bar.time:SetText( floor(dt/60) ..":".. string.format( "%02d", floor(dt % 60)) ) ;
-end
-
-function oq.utimer_countdown_update( bar ) 
-  if (bar._start == 0) then
-    return ;
-  end
-  
-  local now = GetTime() ;
-  if (bar._end < now) then
-    -- timer ended
-    if (bar._trigger) then
-      bar._trigger( bar, now ) ;
-    end
-    -- reset timer data for reuse and shuffle remaining
-    oq.utimer_done( bar ) ;
-    return ;
-  end
-
-  local dt = (bar._end - now) ;
-  local tm = (bar._end - bar._start) ;
-  local width = floor(bar.backdrop:GetWidth()+1) ;
-  if (tm == 0) then
-    return ;
-  end
-  bar.texture:SetPoint( "TOPRIGHT", bar, "TOPRIGHT", width * (dt / tm) - width, 0 ) ;
-  bar.time:SetText( floor(dt/60) ..":".. string.format( "%02d", floor(dt % 60)) ) ;
-  if (bar._count) then
-    bar.count:SetText( tostring(bar._count) .."x" ) ;
-  else
-    bar.count:SetText( "" ) ;
-  end
-end
-
-function oq.utimer_create( parent, handle, x, y, cx, cy ) 
-  oq.nlistings = oq.nlistings + 1 ;
-  local d = oq.CreateFrame("FRAME", "OQUserTimer".. oq.nlistings, parent ) ;
-  d:SetBackdropColor(0.8,0.8,0.8,1.0) ;
-  oq.setpos( d, x, y, cx+1, cy ) ;
-  local b = d:CreateTexture( nil, "BACKGROUND" ) ;
-  b:SetTexture( 0.2, 0.2, 0.2, 0.4 ) ;
-  b:SetAllPoints(d) ;
-  b:SetWidth(cx) ;
-  b:SetPoint( "TOPLEFT", d, "TOPLEFT", 16, 0 ) ;
-  d.backdrop = b ;
-
-  local i = d:CreateTexture( nil, "LOW" ) ;
-  i:SetTexture( "INTERFACE/BUTTONS/GRADBLUE" ) ;
-  i:SetWidth ( 16 ) ;
-  i:SetHeight( 16 ) ;
-  i:SetPoint( "TOPLEFT", d, "TOPLEFT", 0, -2 ) ;
-  i:SetAlpha( 1.0 ) ;
-  d.icon = i ;
-
-  local t = d:CreateTexture( nil, "LOW" ) ;
-  t:SetTexture( "INTERFACE/BUTTONS/GRADBLUE" ) ;
-  t:SetAllPoints(d) ;
-  t:SetPoint( "TOPLEFT", d, "TOPLEFT", 16+1, 0 ) ;
-  t:SetAlpha( 0.6 ) ;
-  d.texture = t ;
-
-  d.label = oq.label( d, 16+5, 2, d:GetWidth()-(2*5+16), d:GetHeight() - 2*2, "", "MIDDLE", "LEFT", nil, "MEDIUM" ) ; 
-  d.label:SetTextColor( 1, 1, 1 ) ;
-  
-  d.count = oq.label( d, 2, 2, 60, d:GetHeight() - 2*2, "", "MIDDLE", "LEFT", nil, "MEDIUM" ) ; 
-  d.count:SetTextColor( 1, 1, 1 ) ;
-  d.count:SetPoint( "TOPLEFT", d, "TOPLEFT", -60, -2 ) ;
-  d.count:SetJustifyH( "RIGHT" ) ;
-  
-  d.ressers = oq.label( d, 2, 2, 60, d:GetHeight() - 2*2, "", "MIDDLE", "LEFT", nil, "MEDIUM" ) ; 
-  d.ressers:SetTextColor( 1, 1, 1 ) ;
-  d.ressers:SetPoint( "TOPLEFT", d, "TOPRIGHT", 2, -2 ) ;
-  d.ressers:SetJustifyH( "LEFT" ) ;
-  
-  d.time = oq.label( d, d:GetWidth() - 50 - 5, 2, 50, d:GetHeight() - 2*2, "0:00", "MIDDLE", "RIGHT", nil, "MEDIUM" ) ; 
-  d.time:SetTextColor( 1, 1, 1 ) ;
-  d.time:SetPoint( "TOPLEFT", d, "TOPRIGHT", -60, -2 ) ;
-  d._start  = 0 ;
-  d._end    = 0 ;
-  d._handle = handle ;
-  d._type   = 1 ; -- standard count down
-  d:SetScript("OnUpdate", function(self, elapsed) oq.utimer_update( self ) ; end ) ;
-  
-  d:SetMovable(false) ;
-  d:EnableMouse(true) ;
-  d:SetScript("OnMouseUp", function(self, button) 
-                             if (button == "LeftButton") and (self._type == 1) and (_inside_bg) then
-                               SendChatMessage( self.label:GetText() .."   ".. self.time:GetText(), 
-                                                "INSTANCE_CHAT" ) ;
-                             end
-                           end ) ;
-  d:Hide() ;
-  
-  d.set_width = function(self, w) 
-                  local x, y = self:GetLeft(), self:GetTop() ;
-                  x = abs(x - self:GetParent():GetLeft()) ;
-                  y = abs(y - self:GetParent():GetTop()) ;
-                  self:SetPoint( "TOPLEFT", self:GetParent(), "TOPLEFT", x, -1 * y ) ;
-                  self:SetWidth(w) ;
-                  self.backdrop:SetWidth(w) ;
-                end
-  return d ;
-end
-
-function oq.utimer_find( name, type )
-  for i,v in pairs(oq._utimers) do
-    if (v.label:GetText() == name) and (v._start ~= 0) and ((type == nil) or (v._type == type)) then
-      return v ;
-    end
-  end
-  return nil ;
-end
-
-function oq.utimer_find_unused()
-  for i,v in pairs(oq._utimers) do
-    if (v._start == 0) then
-      return v ;
-    end
-  end
-  return nil ;
-end
-
-function oq.utimer_compare( a, b )
-  if (a == nil) then
-    return false ;
-  elseif (b == nil) then
-    return true ;
-  end
-  return (oq._utimers[b]._end < oq._utimers[a]._end) ;
-end
-
-function oq.utimer_compare_alpha( a, b )
-  if (a == nil) then
-    return false ;
-  elseif (b == nil) then
-    return true ;
-  end
-  return (oq._utimers[a].label:GetText() < oq._utimers[b].label:GetText()) ;
-end
-
-function oq.utimer_compare_capped( a, b )
-  if (a == nil) then
-    return false ;
-  elseif (b == nil) then
-    return true ;
-  end
-  if (oq._utimers[b]._faction ~= oq._utimers[a]._faction) then
-    return oq._utimers[a]._faction == "alliance" ;
-  end
-  return (oq._utimers[a].label:GetText() < oq._utimers[b].label:GetText()) ;
-end
-
-function oq.utimer_shuffle()
-  if (_bg_shortname ~= nil) and (oq._bg_checks[ _bg_shortname ] ~= nil) then
-    return oq._bg_checks[ _bg_shortname ].shuffle() ;
-  end
-  -- default shuffle
-  return oq._bg_checks[ "AB" ].shuffle() ;
-end
-
-function oq.utimer_set( msg, tm )
-  -- find unused timer or create a new one
-  local t = oq.utimer_find_unused() ;
-  if (t == nil) then
-    print( "all timers used" ) ;
-    return ;
-  end
-  t.label:SetText( msg ) ;
-  t._start = GetTime() ;
-  t._end   = t._start + tm ;
-  t.texture:SetTexture( "INTERFACE/BUTTONS/GRADBLUE" ) ;
-  t.texture:SetAlpha( 0.6 ) ;
-  t.icon:SetTexture( nil ) ;
-  t:Show() ;
-  oq.utimer_shuffle() ;
-end
-
-function oq.utimer_set_horde( msg, tm )
-  -- find unused timer or create a new one
-  local t = oq.utimer_find_unused() ;
-  if (t == nil) then
-    print( "all timers used" ) ;
-    return ;
-  end
-  t.label:SetText( msg ) ;
-  t._start = GetTime() ;
-  t._end   = t._start + tm ;
-  t.texture:SetTexture( 1.0, 0.0, 0.0 ) ;
-  t.texture:SetGradient("HORIZONTAL", 0.4, 0.0, 0.0, 
-                                      1.0, 0.0, 0.0 ) ;                                      
-  t:Show() ;
-  oq.utimer_shuffle() ;
-end
-
-function oq.utimer_set_alliance( msg, tm )
-  -- find unused timer or create a new one
-  local t = oq.utimer_find_unused() ;
-  if (t == nil) then
-    print( "all timers used" ) ;
-    return ;
-  end
-  t.label:SetText( msg ) ;
-  t._start = GetTime() ;
-  t._end   = t._start + tm ;
-  t.texture:SetTexture( 0.0, 0.0, 1.0 ) ;
-  t.texture:SetGradient("VERTICAL", 0.0, 0.0, 0.4,
-                                    0.0, 0.0, 1.0 ) ;
-  t:Show() ;
-  oq.utimer_shuffle() ;
-end
-
-function oq.where_am_i()
-  if (oq._inside_instance == nil) then
-    local x, y = GetPlayerMapPosition("player") ; 
-    print( "location: ".. floor(x*1000)/1000 .." , ".. floor(y*1000)/1000 .."  ".. tostring(GetZoneText()) ) ;
-  elseif (_bg_shortname ~= nil) and (oq._bg_checks[ _bg_shortname ] ~= nil) and (oq._bg_checks[ _bg_shortname ].loc ~= nil) then
-    oq._bg_checks[ _bg_shortname ].loc() ;
-  else
-    local x, y = GetPlayerMapPosition("player") ; 
-    print( "location: ".. floor(x*1000)/1000 .." , ".. floor(y*1000)/1000 ) ;
-  end
-end
-
-function oq.utimer_test( arg1, arg2 ) 
-  if (arg1) then
-    arg1 = arg1:upper() ;
-  end
-  if (arg1 ~= nil) and (oq._bg_checks[ arg1 ] ~= nil) and (oq._bg_checks[ arg1 ].test ~= nil) then
-    return oq._bg_checks[ arg1 ].test( arg2 ) ;
-  end
-  -- basic test
-  local t ;
-  oq.utimer_start( "test 1", "horde", 13, 60, 1 ) ;
-  oq.utimer_start( "test 2", "horde", 13, 60, 2 ) ;
-  t = oq.utimer_start( "test 3", "horde", 13, 60, 3 ) ;
-  t._count = 5 ;
-  t._dead  = 8 ;
-  t = oq.utimer_start( "test 3a", "horde", 13, 60, 3 ) ;
-  t._count = 5 ;
-  oq.utimer_start( "test 4", "horde", 13, 60, 4 ) ;
-  oq.utimer_start( "test 5", "horde", 13, 60, 5 ) ;
-  oq.utimer_start( "test 6", "alliance", 14, 60, 1 ) ;
-end
-
-function oq.utimer_start( name, faction, textureIndex, tm, type_, notime )
-  local t = oq.utimer_find( name, type_ ) ;
-  if (t ~= nil) and (faction == t._faction) then
-    oq.utimer_shuffle() ; -- may not be needed
-    return t ;
-  end
-  if (t == nil) then
-    t = oq.utimer_find_unused() ;
-  end
-  if (t == nil) then
-    print( "all timers used" ) ;
-    return ;
-  end
-  t.label:SetText( name ) ;
-  t._start    = GetTime() ;
-  t._end      = t._start + tm ;
-  t._tm       = tm ; -- original time 
-  t._type     = (type_ or 1) ;
-  t._faction  = faction ;
-  t._count    = nil ;
-  t._dead     = nil ;
-  t._notime   = notime ;
-  t.ressers:SetText("") ;
-
-  if (faction == "horde") then
-    t.texture:SetTexture( 1.0, 0.0, 0.0 ) ;
-    t.texture:SetGradient("VERTICAL", 0.4, 0.0, 0.0, 
-                                      1.0, 0.0, 0.0 ) ;
-  elseif (faction == "alliance") then
-    t.texture:SetTexture( 0.0, 0.0, 1.0 ) ;
-    t.texture:SetGradient("VERTICAL", 0.0, 0.0, 0.4, 
-                                      0.0, 0.0, 1.0 ) ;
-  else
-    t.texture:SetTexture( "INTERFACE/BUTTONS/GRADBLUE" ) ;
-  end
-
-  if (textureIndex) and (type(textureIndex) == "number") then
-    t.icon:SetTexture( "Interface/Minimap/POIIcons.blp" ) ;
-    local x1, x2, y1, y2 = GetPOITextureCoords(textureIndex);
-    t.icon:SetTexCoord(x1, x2, y1, y2) ;
-  else
-    t.icon:SetTexture( textureIndex ) ;
-    t.icon:SetTexCoord(0,1,0,1) ;
-  end
-  t:Show() ;
-  oq.utimer_shuffle() ;
-  return t ;
-end
-
-function oq.utimer_stop( name, type )
-  if (type == nil) then
-    type = 1 ;
-  end
-  for i,v in pairs(oq._utimers) do
-    if ((name == nil) or (v.label:GetText() == name)) and ((type == -1) or (v._type == type)) and (v:IsVisible()) then
-      v.label  :SetText( "" ) ;
-      v.time   :SetText( "0:00" ) ;
-      v.texture:SetTexture( "INTERFACE/BUTTONS/GRADBLUE" ) ;
-      v._start = 0 ;
-      v._end   = 0 ;
-      v._trigger = nil ;
-      v:Hide() ;
-      oq.utimer_shuffle() ;
-      if (name ~= nil) then
-        return 1 ;
-      end
-    end
-  end  
-  return nil ;
-end
-
-function oq.utimer_stop_all()
-  for i,v in pairs(oq._utimers) do
-    v.label  :SetText( "" ) ;
-    v.time   :SetText( "0:00" ) ;
-    v.texture:SetTexture( "INTERFACE/BUTTONS/GRADBLUE" ) ;
-    v._start   = 0 ;
-    v._end     = 0 ;
-    v._trigger = nil ;
-    v._type    = 0 ;
-    v._count   = 0 ;
-    v:Hide() ;
-  end  
-  oq.utimer_shuffle() ;
-end
-
-function oq.utimer_dump() 
-  print( "timer-bar dump:" ) ;
-  for i,v in pairs(oq._utimers) do
-    if (v._start > 0) then
-      print( v.label:GetText() .." type(".. tostring(v._type) ..")  notime(".. tostring(v._notime) ..") count: ".. 
-             tostring(v._count) .."  dead: ".. tostring(v._dead) ) ;
-    end
-  end
-  print( "---" ) ;
-end
-
-function string.find_end( self, s )
-  if (s) then
-    return self:find( s ) + string.len( s ) ;
-  end
-end
-
-function oq.user_timer( opts )
-  oq.utimer_frame():Show() ;
-  if (opts == nil) then
-    return ;
-  end
-  local v ;
-  local args = {} ;
-  for v in string.gmatch(opts, "([^ ]+)") do
-    table.insert(args, v);
-  end
-  if (args[1] == "h") then
-    oq.utimer_start( "horde timer", "horde", 17, 4*60 ) ;
-  elseif (args[1] == "a") then
-    oq.utimer_start( "alliance timer", "alliance", 12, 4*60 ) ;
-  elseif (args[1] == "upa") then
-    oq.utimer_start( "alliance win", "alliance", 43, 1*60, 2 ) ;
-  elseif (args[1] == "uph") then
-    oq.utimer_start( "horde win", "horde", 44, 1*60, 2 ) ;
-  elseif (args[1] == "dump") then
-    oq.utimer_dump() ;
-  elseif (args[1]:find("test")) then
-    oq.utimer_test( args[2], args[3] ) ;
-  elseif (args[1] == "clear") then
-    oq.utimer_stop_all() ;
-  elseif (args[1] == "shuffle") then
-    oq.utimer_shuffle() ;
-  elseif (args[1] ~= nil) then
-    oq.utimer_set( "test timer", 1*60 ) ;
-  end
-end
-
-function oq.utimer_check_bg_updates()
-  -- check timers for current bg
-  if (_bg_shortname == nil) then
-    -- not ready yet
-    oq.get_zone_info() ;
-    if (_bg_shortname == nil) then
-      return ;
-    end
-  end
-  if (oq._bg_checks[ _bg_shortname ] ~= nil) then
-    oq._bg_checks[ _bg_shortname ].check() ;
-  end
-end
-
-function oq.utimer_bg_completed()
-  if (_bg_shortname ~= nil) and (oq._bg_checks[ _bg_shortname ] ~= nil) then
-    oq._bg_checks[ _bg_shortname ].close() ;
-  end
-  oq.utimer_stop_all() ; -- clears all timers; might want to keep non-bg timers
-end
-
-function oq.utimer_check_init()
-  oq._utimers = {} ;
-  for i=1,25 do
-    oq._utimers[i] = oq.utimer_create( oq.utimer_frame(), i, 0, 18+20*(i-1), OQ_data.timer_width or 200, 20 ) ;
-  end
-  
-  if (oq._bg_checks == nil) then
-    oq._bg_checks = {} ;
   end
 end
 
@@ -1262,38 +543,6 @@ function oq.leave_party()
   oq.raid_cleanup() ;
 end
 
-function oq.dip()
-  local n_bnfriends = select( 1, BNGetNumFriends() )  ;
-  if (n_bnfriends >= OQ_MAX_BNFRIENDS) then
-    print( OQ_LILSKULL_ICON .." ".. string.format( OQ.NODIPFORYOU, OQ_MAX_BNFRIENDS ) ) ;
-    return ;
-  end
-  local now = utc_time() ;
-  if (_next_dip > now) then
-    return ;
-  end
-  _next_dip = now + OQ_DIP_GAP ;
-  
-  local msg_tok = "W".. oq.token_gen() ;
-  oq.token_push( msg_tok ) ;
-  
-  local token = "M".. oq.token_gen() ;
-  oq.token_push( token ) ;
-  
-  local msg = "OQ,".. 
-              OQ_VER ..",".. 
-              msg_tok ..","..
-              OQ_TTL ..",".. 
-              "req_mesh,".. 
-              token ;  
-              
-  -- allow for dip request
-  local temp = _oqgeneral_lockdown ;
-  _oqgeneral_lockdown = nil ;
-  oq.channel_general( msg ) ;
-  _oqgeneral_lockdown = temp ;
-end
-
 function oq.ban_user( tag )
   if (tag == nil) then
     return ;
@@ -1311,7 +560,6 @@ function oq.usage()
   print( L["  adds            show the list of OQ added b.net friends"] ) ;
   print( L["  ban [b-tag]     manually add battle-tag to your ban list"] ) ;
   print( L["  bnclear         clear OQ enabled battle-net associations"] ) ;
-  print( L["  brb             signal to the group that you'll be-right-back"] ) ;
   print( L["  check           force OQ capability check"] ) ;
   print( L["  cp              toggle class portraits to normal portrait"] ) ;
   print( L["  dg              drop group.  same as /script LeaveParty()"] ) ;
@@ -1401,45 +649,6 @@ end
 
 function oq.GetNumPartyMembers()
   return GetNumGroupMembers() ;
-end
-
-local _consts = { 0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832, 
-                  0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2, 
-                  0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 
-                  0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172, 
-                  0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 
-                  0x45DF5C75, 0xDCD60DCF, 0xABD13D59, 0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423, 
-                  0xCFBA9599, 0xB8BDA50F, 0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB, 
-                  0xB6662D3D, 0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433, 
-                  0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB, 0x086D3D2D, 0x91646C97, 0xE6635C01, 0x6B6B51F4, 
-                  0x1C6C6162, 0x856530D8, 0xF262004E, 0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950, 
-                  0x8BBEB8EA, 0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65, 0x4DB26158, 0x3AB551CE, 0xA3BC0074, 
-                  0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0, 
-                  0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9, 0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525, 
-                  0x206F85B3, 0xB966D409, 0xCE61E49F, 0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81, 
-                  0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739, 0x9DD277AF, 0x04DB2615, 
-                  0x73DC1683, 0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8, 0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1, 
-                  0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7, 0xFED41B76, 
-                  0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8, 0xA1D1937E, 
-                  0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B, 0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 
-                  0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF, 0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236, 
-                  0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7, 
-                  0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D, 0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F, 
-                  0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 
-                  0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777, 
-                  0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45, 0xA00AE278, 
-                  0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 
-                  0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330, 
-                  0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 
-                  0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D }
-   
-function oq.CRC32(s)
-   local bit_band, bit_bxor, bit_rshift, str_byte, str_len = bit.band, bit.bxor, bit.rshift, string.byte, string.len
-   local crc, l, i = 0xFFFFFFFF, str_len(s)
-   for i = 1, l, 1 do
-      crc = bit_bxor(bit_rshift(crc, 8), _consts[bit_band(bit_bxor(crc, str_byte(s, i)), 0xFF) + 1])
-   end
-   return bit_bxor(crc, -1)
 end
 
 function oq.mycrew( arg )
@@ -1759,20 +968,6 @@ function oq.total_tears()
     n = n + v ;
   end
   return n ;
-end
-
-function oq.new_tears( ntears )
-  if (player_name == nil) then
-    player_name = UnitName("player") ;
-  end
-  if (player_realm == nil) then
-    player_realm = oq.GetRealmName() ;
-  end
-  if (player_faction == nil) then
-    oq.get_player_faction() ;
-  end
-  local ndx = strlower( player_realm ) ..".".. player_faction ..".".. strlower( player_name ) ;
-  OQ_data.tear_cup[ ndx ] = (OQ_data.tear_cup[ ndx ] or 0) + ntears ;
 end
 
 function oq.n_premades()
@@ -5259,7 +4454,6 @@ end
 function oq.ui_raidleader()  
   oq.tab1_quit_button:SetText( OQ.DISBAND_PREMADE ) ;
   oq.tab1_readycheck_button:Show() ;
-  oq.tab1_brb_button:Show() ;
   OQMainFrameTab6:Show() ;
 end
 
@@ -5272,11 +4466,6 @@ function oq.ui_player()
   oq.tab1_quit_button:SetText( OQ.LEAVE_PREMADE ) ;
   oq.tab1_readycheck_button:Hide() ;
   OQMainFrameTab6:Hide() ;
-  if (my_slot == 0) then
-    oq.tab1_brb_button:Hide() ;
-  else
-    oq.tab1_brb_button:Show() ;
-  end
 end
 
 function oq.raid_cleanup()
@@ -7322,160 +6511,6 @@ function oq.create_filter_button( parent )
 end
 
 
-function oq.tooltip_game_record( a, b )
-  local s = "|cFFA0A0A0".. tostring(a or 0) .."|r" ;
-  s = s .."|cFFB0B0B0".. " - " .."|r" ;
-  s = s .."|cFFFFFF31".. tostring(b or 0) .."|r" ;
-  return s ;
-end
-
-function oq.tooltip_game_record2( a, b, is_lead )
-  local s = "|cFFA0A0A0" ;
-  if (is_lead) then
-    s = "|cFFFFFF31" ;
-  end
-  s = s .. tostring(a or 0) .." - ".. tostring(b or 0) .."|r" ;
-  return s ;
-end
-
-function oq.tooltip_me_hide()
-  local tooltip = oq.long_tooltip_create() ;
-  tooltip:Hide() ;
-end
-
-function oq.tooltip_me()
-  local tooltip = oq.long_tooltip_create() ;
-  
-  oq.gather_my_stats() ; -- force stats gather for display
-
-  tooltip:ClearAllPoints() ;
-  tooltip:SetParent( OQMainFrame, "ANCHOR_RIGHT" ) ;
-  tooltip:SetPoint("TOPRIGHT", OQMainFrame, "TOPLEFT", -5, -20 ) ;
-  tooltip:SetFrameLevel( OQMainFrame:GetFrameLevel() + 10 ) ;
-  oq.tooltip_clear() ;
-
-  if (OQ.CLASS_COLORS[player_class] == nil) then
-    return ;
-  end
-
-  local t = CLASS_ICON_TCOORDS[ OQ.LONG_CLASS[player_class] ] ;
-  if t then
-    tooltip.portrait.texture:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles") ;
-    tooltip.portrait.texture:SetTexCoord(unpack(t)) ;
-    tooltip.portrait.texture:SetAlpha( 1.0 ) ;
-  end
-  
-  local color = OQ.CLASS_COLORS[player_class]
-  
-  tooltip.left [ 1]:SetText( player_name .." (".. tostring(player_level or 0) ..")" ) ;
-  tooltip.left [ 1]:SetTextColor( color.r, color.g, color.b, 1 ) ;
-  tooltip.left [ 2]:SetText( player_realm ) ;
-  tooltip.left [ 2]:SetTextColor( 0.0, 0.9, 0.9, 1 ) ;
-  
-  tooltip.right[ 2]:SetText( oq.get_rank_icons( oq.get_pvp_experience() ) ) ;
-
-  tooltip.left [ 3]:SetText( oq.find_bgroup( player_realm ) ) ;
-  tooltip.left [ 3]:SetTextColor( 0.8, 0.8, 0.8, 1 ) ;
-
-  tooltip.left [ 4]:SetText( OQ.TT_BATTLE_TAG ) ;
-  tooltip.right[ 4]:SetText( player_realid ) ;
-  
-  tooltip.left [ 5]:SetText( OQ.TT_KARMA ) ;
-  if (player_karma ~= nil) and (player_karma ~= 0) then
-    tooltip.right[ 5]:SetText( oq.karma_color( player_karma ) .."".. tostring(player_karma) .."|r" ) ;
-  else
-    tooltip.right[ 5]:SetText( "--" ) ;
-  end
-
-  tooltip.left [ 6]:SetText( OQ.TT_ILEVEL ) ;
-  tooltip.right[ 6]:SetText( player_ilevel ) ;
-
-  tooltip.left [ 7]:SetText( OQ.TT_TEARS ) ;
-  tooltip.right[ 7]:SetText( tostring(oq.total_tears()) ) ;
-  
-  tooltip.left [ 8]:SetText( OQ.TT_REGULAR_BG ) ;
-  tooltip.right[ 8]:SetText( "" ) ;
---  tooltip.right[ 8]:SetText( oq.tooltip_game_record( OQ_toon.stats["bg"].nGames, OQ_data.leader["bg"].nGames )) ;
-  
-  tooltip.left [ 9]:SetText( "-  ".. OQ.TT_PERSONAL ) ;
-  tooltip.right[ 9]:SetText( oq.tooltip_game_record2( OQ_toon.stats["bg"].nWins, OQ_toon.stats["bg"].nLosses, nil ) ) ;
-  
-  tooltip.left [10]:SetText( "-  ".. OQ.TT_ASLEAD ) ;
-  local tag, y, cx, cy, bg_title = oq.get_dragon_rank( OQ.TYPE_BG, OQ_data.leader["bg"].nWins ) ;  
-  if (tag) then
-    if (y == 0) then
-      tooltip.right[10]:SetText( "|T".. tag ..":32:32|t ".. oq.tooltip_game_record2( OQ_data.leader["bg"].nWins, OQ_data.leader["bg"].nLosses, true )) ;
-    else
-      tooltip.right[10]:SetText( "|T".. tag ..":20:20|t ".. oq.tooltip_game_record2( OQ_data.leader["bg"].nWins, OQ_data.leader["bg"].nLosses, true )) ;
-    end
-  else
-    tooltip.right[10]:SetText( oq.tooltip_game_record2( OQ_data.leader["bg"].nWins, OQ_data.leader["bg"].nLosses, true )) ;
-  end
-
-  tooltip.left [11]:SetText( OQ.LABEL_RBGS ) ;
-  tooltip.right[11]:SetText( "" ) ;
---  tooltip.right[11]:SetText( oq.tooltip_game_record( OQ_toon.stats["rbg"].nGames, OQ_data.leader["rbg"].nGames )) ;
-  
-  tooltip.left [12]:SetText( "-  ".. OQ.TT_PERSONAL ) ;
-  tooltip.right[12]:SetText( oq.tooltip_game_record2( OQ_toon.stats["rbg"].nWins, OQ_toon.stats["rbg"].nLosses, nil ) ) ;
-  
-  tooltip.left [13]:SetText( "-  ".. OQ.TT_ASLEAD ) ;
-  local tag, y, cx, cy, rbg_title = oq.get_dragon_rank( OQ.TYPE_RBG, OQ_data.leader["rbg"].nWins ) ;  
-  if (tag) then
-    if (y == 0) then
-      tooltip.right[13]:SetText( "|T".. tag ..":32:32|t ".. oq.tooltip_game_record2( OQ_data.leader["rbg"].nWins, OQ_data.leader["rbg"].nLosses, true )) ;
-    else
-      tooltip.right[13]:SetText( "|T".. tag ..":20:20|t ".. oq.tooltip_game_record2( OQ_data.leader["rbg"].nWins, OQ_data.leader["rbg"].nLosses, true )) ;
-    end
-  else
-    tooltip.right[13]:SetText( oq.tooltip_game_record2( OQ_data.leader["rbg"].nWins, OQ_data.leader["rbg"].nLosses, true )) ;
-  end
-    
-  tooltip.left [14]:SetText( OQ.TT_MMR ) ;
-  local s = "|cFFF08040".. tostring(oq.get_arena_rating(1)) .."|r "..
-   "|cFFF0F0A0".. tostring(oq.get_arena_rating(2)) .."|r "..
-   "|cFFF08040".. tostring(oq.get_arena_rating(3)) .."|r "..
-   "|cFFF0F0A0".. tostring(oq.get_mmr()) .."|r" ;
-  
-  tooltip.right[14]:SetText( s ) ;
-
-  tooltip.left [15]:SetText( OQ.TT_5MANS ) ;
-  tooltip.right[15]:SetText( tostring(OQ_data.leader["pve.5man"].nBosses or 0) .." - ".. tostring(OQ_data.leader["pve.5man"].nWipes or 0) ) ;
-  
-  tooltip.left [16]:SetText( OQ.TT_RAIDS ) ;
-  tooltip.right[16]:SetText( tostring(OQ_data.leader["pve.raid"].nBosses or 0) .." - ".. tostring(OQ_data.leader["pve.raid"].nWipes or 0) ) ;
-  
-  tooltip.left [17]:SetText( OQ.TT_CHALLENGES ) ;
-  tooltip.right[17]:SetText( tostring(OQ_data.leader["pve.challenge"].nBosses or 0) .." - ".. tostring(OQ_data.leader["pve.challenge"].nWipes or 0) ) ;
-  
-  tooltip.left [18]:SetText( OQ.TT_LEADER_DKP ) ;
-  local tag, y, cx, cy, title = oq.get_dragon_rank( OQ.TYPE_DUNGEON, OQ_data.leader_dkp ) ;  
-  if (tag) then
-    if (y == 0) then
-      tooltip.right[18]:SetText( "|T".. tag ..":32:32|t ".. tostring(OQ_data.leader_dkp or 0)) ;
-    else
-      tooltip.right[18]:SetText( "|T".. tag ..":20:20|t ".. tostring(OQ_data.leader_dkp or 0)) ;
-    end
-  else
-    tooltip.right[18]:SetText( tostring(OQ_data.leader_dkp or 0) ) ;
-  end
-  
-  tooltip.left [19]:SetText( OQ.TT_DKP ) ;
-  tooltip.right[19]:SetText( tostring(OQ_data._dkp or 0) ) ;
-  
-  tooltip.left [tooltip.nRows - 0]:SetText( oq.get_rank_achieves( oq.get_pvp_experience() ) ) ;
-  tooltip.right[tooltip.nRows - 0]:SetText( "" ) ;
-    
-  -- adjust dimensions of the box
-  local w = tooltip.left[1]:GetStringWidth() ;
-  for i=4,tooltip.nRows do
-    tooltip.right[ i]:SetWidth( tooltip:GetWidth() - 30 ) ;
-  end
-
-  tooltip:Show() ;
-end
-
-
 function oq.create_tab1_dungeon( parent )
   local x, y, cx, cy, label_cx ;
   local group_id = 1 ; -- only one group
@@ -7559,15 +6594,6 @@ function oq.create_tab1_common( parent )
   --[[ tag and version ]]--
   OQFrameHeaderLogo:SetText( OQ.TITLE_LEFT .."".. OQUEUE_VERSION .."".. OQ.TITLE_RIGHT ) ;
 
-  -- brb button
-  oq.tab1_brb_button = oq.button( parent, 300, y, 100, 28, OQ.ILL_BRB, 
-                                  function(self) oq.brb() ; end ) ;
-
-  -- lucky charms  
-  y = y + 30 ;
-  oq.tab1_lucky_charms = oq.button( parent, 250, parent:GetHeight()-40, 100, 25, OQ.LUCKY_CHARMS, 
-                                    function(self) oq.assign_lucky_charms() ; end ) ;
-  oq.tab1_lucky_charms:Hide() ;
   -- ready check
   oq.tab1_readycheck_button = oq.button( parent, 350, parent:GetHeight()-40, 100, 25, OQ.READY_CHK, 
                                          function(self) oq.start_ready_check() ; end ) ;
@@ -10440,63 +9466,6 @@ function oq.start_ready_check()
   oq.on_ready_check() ;
 end
 
-function oq.brb()
-  if (oq.raid.raid_token == nil) or (my_group == 0) or (my_slot == 0) then
-    return ;
-  end
-  oq.raid_announce( "brb,".. oq.raid.raid_token ..",".. my_group ..",".. my_slot ) ;
-  player_away = true ;
-  oq.on_brb( oq.raid.raid_token, my_group, my_slot ) ;
-  
-  oq.brb_dlg() ;
-  if ((oq.raid.type == OQ.TYPE_RBG) or (oq.raid.type == OQ.TYPE_RAID)) then
-    SendChatMessage( "brb", "RAID", nil ) ;  
-  else
-    SendChatMessage( "brb", "PARTY", nil ) ;  
-  end
-end
-
-function oq.iam_back()
-  player_away = nil ;
-  oq.raid_announce( "iam_back,".. oq.raid.raid_token ..",".. my_group ..",".. my_slot ) ;
-  oq.on_iam_back( oq.raid.raid_token, my_group, my_slot ) ;
-  if ((oq.raid.type == OQ.TYPE_RBG) or (oq.raid.type == OQ.TYPE_RAID)) then
-    SendChatMessage( "back", "RAID", nil ) ;  
-  else
-    SendChatMessage( "back", "PARTY", nil ) ;  
-  end
-end
-
-function oq.on_brb( raid_token, g_id, slot )
-  if (raid_token ~= oq.raid.raid_token) then
-    return ;
-  end
-  g_id = tonumber( g_id ) ;
-  slot = tonumber( slot ) ;
-
-  if (g_id <= 0) or (slot <= 0) then
-    return ;
-  end
-  local m = oq.raid.group[g_id].member[slot] ;
-  m.flags = oq.bset( m.flags, OQ.FLAG_BRB, true ) ;
-  oq.set_textures( g_id, slot ) ;
-end
-
-function oq.on_iam_back( raid_token, g_id, slot )
-  if (raid_token ~= oq.raid.raid_token) then
-    return ;
-  end
-  g_id = tonumber( g_id ) ;
-  slot = tonumber( slot ) ;
-
-  if (g_id <= 0) or (slot <= 0) then
-    return ;
-  end
-  local m = oq.raid.group[g_id].member[slot] ;
-  m.flags = oq.bset( m.flags, OQ.FLAG_BRB, nil ) ;
-  oq.set_textures( g_id, slot ) ;
-end
-
 function oq.ready_check_complete()
   oq.on_ready_check_complete() ;
 end
@@ -10544,18 +9513,6 @@ function oq.nMembers()
     end
   end
   return nMembers ;
-end
-
-function oq.strrep(value, insert, place)
-  if (value == nil) then
-    return insert ;
-  end
-  if place == nil or (place > #value) then
-    place = string.len(value)+1
-  elseif (place <= 0) then
-    place = 1 ;
-  end
-  return string.sub( value, 1, place-1) .. insert .. string.sub( value, place+1, -1 ) ;
 end
 
 function oq.calc_raid_stats()
@@ -10668,28 +9625,6 @@ function oq.set_textures( g_id, slot )
   end
 end
 
-function oq.get_model_standin( gender, race )
-  -- Character\\NightElf\\Female\\NightElfFemale.m2
-  --
-  local fname = "Character" ;
-  local base = "" ;
-  for i,v in pairs(OQ.RACE) do
-    if (v == race) then
-      base = i ;
-      fname = fname .."\\".. base ;
-      break ;
-    end
-  end
-  if (gender == 0) then
-    fname = fname .."\\Male" ;
-    base = base .."Male" ;
-  else
-    fname = fname .."\\Female" ;
-    base = base .."Female" ;
-  end
-  return fname .."\\".. base ..".m2" ;  
-end
-
 function oq.is_dungeon_premade( m )
   if (m == nil) then
     return (oq.raid.type == OQ.TYPE_DUNGEON) or (oq.raid.type == OQ.TYPE_SCENARIO) or 
@@ -10698,132 +9633,6 @@ function oq.is_dungeon_premade( m )
     return (m.premade_type == OQ.TYPE_DUNGEON) or (m.premade_type == OQ.TYPE_SCENARIO) or 
            (m.premade_type == OQ.TYPE_CHALLENGE) or (m.premade_type == OQ.TYPE_QUESTS) ;
   end
-end
-
-function oq.camera_profile_mode( f )
---[[
-  f:SetCamera(1) ; 
-  f:SetCustomCamera(1) ;
-  if (not f:HasCustomCamera()) then
-    f:Show() ;
-    return ;
-  end
-  f:SetModelScale(0.5) ;
-  f:SetCameraDistance(0.25)
-  f:SetCameraFacing(-0.71290230751038) 
-   
-  f.z = 0.69999998807907 ; -- closer / further
-  f.y = 0.20000000298023 ; -- vertical
-  f.x = 0.20000000298023 ;
-  f:SetPosition( f.z, f.x, f.y ) ;
-   
-  f.cam_z =  0.856227159500120 ;
-  f.cam_y = -0.099748730659485 ;
-  f.cam_x =  0.637427389621730 ;
-  f:SetCameraPosition( f.cam_z, f.cam_y, f.cam_x ) ;
-]]--
-  f:SetCamera(0) ;
---  f:SetCameraDistance(25) ; -- must be a custom view to be used
-  f:Show() ;
-end
-
-function oq.model_slot_empty( panel ) 
-  if (panel.model_frame ~= nil) and (panel.model_frame:IsVisible()) and (panel.model ~= nil) and (panel._model ~= nil) then
-    panel._model = nil ;
-    panel.model:ClearModel() ;
-  end
-  panel.model:Hide() ;
-  panel.standin:Hide() ;
-  if ((oq.raid.type == OQ.TYPE_BG) or (oq.raid.type == OQ.TYPE_RBG) or (oq.raid.type == OQ.TYPE_RAID)) then
-    panel.model_frame:Hide() ;
-  else
-    panel.model_frame:Show() ;
-  end
-end
-
-function oq.model_slot_create( panel )
-  oq.nmodels = (oq.nmodels or 0) + 1 ;
-  panel.model_frame = oq.CreateFrame("Button", "OQModelFrame".. oq.nmodels, panel ) ;
-  panel.model_frame:SetBackdrop({bgFile="Interface/Tooltips/UI-Tooltip-Background", 
-                                 edgeFile="Interface/Tooltips/UI-Tooltip-Border", 
-                                 tile=true, tileSize = 16, edgeSize = 16,
-                                 insets = { left = 1, right = 1, top = 1, bottom = 1 }
-                                })
-  panel.model_frame:SetBackdropColor(0.0,0.0,0.0,1.0);
-  panel.model_frame:SetAlpha( 0.8 ) ;
-  panel.model_frame:Show() ;
-  oq.setpos( panel.model_frame, 0,  0, panel:GetWidth(),  panel:GetHeight()-17 ) ;
-  if (panel.model == nil) then
-    panel.model = oq.CreateFrame("DressUpModel", "OQModel".. oq.nmodels, panel.model_frame ) ;
-    panel.model:SetPoint( "TOPLEFT"    , panel.model_frame, "TOPLEFT"    ,  5, -5 ) ;
-    panel.model:SetPoint( "BOTTOMRIGHT", panel.model_frame, "BOTTOMRIGHT", -5,  5 ) ;
-    panel.model:Hide() ;
-      
-    panel.standin = oq.CreateFrame("Model", "OQModelStandin".. oq.nmodels, panel.model_frame ) ;
-    panel.standin:SetPoint( "TOPLEFT"    , panel.model_frame, "TOPLEFT"    ,  5, -5 ) ;
-    panel.standin:SetPoint( "BOTTOMRIGHT", panel.model_frame, "BOTTOMRIGHT", -5,  5 ) ;
-    panel.standin:Hide() ;
-  end
-end
-
-function oq.adjust_camera( panel, name, gender, race )
-  if (not panel:IsVisible()) then
-    return ;
-  end
-  
-  if (panel._model ~= nil) and (panel._model ~= name) then
-    panel.model:ClearModel() ;
-    panel._model = nil ;
-  end
-  if (name == nil) or (name == "") then
-    panel.model:Hide() ;
-    panel.standin:Hide() ;
-    panel.model_frame:Show() ;
-    return ;
-  end
-  local fname = panel.model:GetModel() ;
-  if (name) and (UnitIsVisible(name)) and (name ~= panel._model) and (fname == "") then
-    panel.model:Show() ;
-    panel.model:SetUnit( name ) ;
-    panel.model:RefreshUnit() ; 
-    panel.model:Dress() ; 
-    panel._model = name ;
-    oq.camera_profile_mode( panel.model ) ;
-    panel.standin:Hide() ;
-  end
-  fname = panel.model:GetModel() ;
-
-  if (fname == "") or (not UnitIsVisible(name)) then
-    panel._model = nil ;
-    fname = oq.get_model_standin( gender, race ) ;
-    if (fname ~= panel.standin._model) then
-      panel.standin:ClearModel() ;
-      panel.standin:Show() ;
-      panel.standin:SetModel( fname ) ;
-      panel.standin:SetAlpha(0.95) ;    
-      panel.standin:SetPoint( "TOPLEFT"    , panel.model_frame, "TOPLEFT"    ,  5, -5 ) ;
-      panel.standin:SetPoint( "BOTTOMRIGHT", panel.model_frame, "BOTTOMRIGHT", -5,  5 ) ;
-      panel.standin._model = fname ;
-    end
-    oq.camera_profile_mode( panel.standin ) ;
-    panel.model:Hide() ;
-  else
-    oq.camera_profile_mode( panel.model ) ;
-  end
-  panel.model_frame:Show() ;
-end
-
-function oq.set_player_model( panel, name, gender, race )
-  if (panel.model_frame == nil) then
-    oq.model_slot_create( panel ) ;
-  end
-  
-  if ((name == nil) and (gender == nil) and (race == nil)) or (not oq.is_dungeon_premade() and (oq.raid.type ~= OQ.TYPE_ARENA))  then
-    oq.model_slot_empty( panel ) ;
-    return ;
-  end
-  
-  oq.adjust_camera( panel, name, gender, race ) ;
 end
 
 function oq.set_textures_cell( m, cell )
@@ -10844,8 +9653,6 @@ function oq.set_textures_cell( m, cell )
   end
   if (color ~= nil) then
     cell.texture:SetTexture( color.r, color.g, color.b, 1 ) ;
-  else
-    -- should not get here
   end
 
   if ((m.name == nil) or (m.name == "") or (m.name == "-")) then
@@ -10853,8 +9660,6 @@ function oq.set_textures_cell( m, cell )
     cell.status:SetTexture( nil ) ;
     cell.class :SetTexture( nil ) ;
     cell.role  :SetTexture( nil ) ;
-    cell.charm :SetTexture( nil ) ;
-    oq.set_player_model( cell, nil, nil, nil ) ;
     if (cell.texture ~= nil) and (oq.is_dungeon_premade() or (oq.raid.type == OQ.TYPE_ARENA)) then
       cell.texture:SetPoint("TOPLEFT", cell.model_frame,"TOPLEFT", 2, -3) ;
       cell.texture:SetPoint("BOTTOMRIGHT", cell.model_frame,"BOTTOMRIGHT", -2, 3) ;
@@ -10908,31 +9713,6 @@ function oq.set_textures_cell( m, cell )
     cell.role:SetTexture( nil ) ; 
   end
   
-  -- set model (dungeons & scenarios)
-  if (m.realm_id == nil) then
-    m.realm_id = 0 ;
-  end
-  m.realm_id = tonumber(m.realm_id) ;
-
-  if (cell.class ~= nil) and (m.realm_id > 0) and (oq.is_dungeon_premade() or (oq.raid.type == OQ.TYPE_ARENA)) then
-    local name = m.name ;
-    if (m.realm_id ~= player_realm_id) then
-      name = name .."-".. oq.realm_uncooked(m.realm_id) ;
-    end
-    if (name ~= nil) then
-      oq.set_player_model( cell, name, m.gender, m.race ) ;
-    end
-    if (cell.texture ~= nil) then
-      cell.texture:SetPoint("TOPLEFT", cell.model_frame,"TOPLEFT", 2, -3) ;
-      cell.texture:SetPoint("BOTTOMRIGHT", cell.model_frame,"BOTTOMRIGHT", -2, 3) ;
-    end
-  end
-
-  -- set lucky charm
-  if (cell.charm ~= nil) then
-    cell.charm:SetTexture( "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcons" ) ;
-    cell.charm:SetTexCoord( unpack(OQ.ICON_COORDS[ m.charm or 0 ]) ); 
-  end
 end
 
 function oq.set_status( g_id, slot, deserter, queued, online )
@@ -10999,17 +9779,6 @@ function oq.gather_my_stats()
   
 end
 
-function oq.set_status_queued( g_id, slot, queued ) 
-  if ((g_id <= 0) or (slot <= 0)) then
-    return ;
-  end
-  local m = oq.raid.group[g_id].member[slot] ;
-
-  m.flags = oq.bset( m.flags, OQ.FLAG_QUEUED, queued ) ;
-
-  oq.set_textures( g_id, slot ) ;
-end
-
 function oq.set_status_online( g_id, slot, online ) 
   if ((g_id <= 0) or (slot <= 0)) then
     return ;
@@ -11046,16 +9815,6 @@ function oq.set_role( g_id, slot, role )
   end
   oq.set_textures( g_id, slot ) ;
 end
-
-function oq.fmt_time( t )
-  if (t == nil) then
-    t = 0 ;
-  end
-  local hrs = floor( t / (60*60)) ;
-  local min = floor( t / 60 ) % 60 ;
-  return string.format( "%d:%02d", hrs, min ) ;
-end
-
 
 function oq.on_stats( name, realm, stats, btag )
   local g_id, slot = oq.decode_slot( stats ) ;
@@ -11203,41 +9962,6 @@ function oq.encode64( str )
    return enc ;
 end
 
-function oq.encrypt( pword, str )
-   local enc = "" ;
-   local plen = strlen(pword) ;
-   local len = strlen(str) ;
-   local n = 1 ;
-   local i ;
-   for i=1,len do
-      local a = oq_ascii[ str:sub(i,i) ] ;
-      local b = oq_ascii[ pword:sub(n,n) ] ;
-      enc = enc .. oq_ascii[ bit.bxor( a, b ) ] ;
-      n = n + 1 ;
-      if (n > plen) then
-         n = 1 ;
-      end
-   end
-   return enc ;
-end
-
-function oq.decrypt( pword, enc )
-   local str = "" ;
-   local plen = strlen(pword) ;
-   local len = strlen(enc) ;
-   local n = 1 ;
-   local i ;
-   for i=1,len do
-      local a = oq_ascii[ enc:sub(i,i) ] ;
-      local b = oq_ascii[ pword:sub(n,n) ] ;
-      str = str .. oq_ascii[ bit.bxor( a, b ) ] ;
-      n = n + 1 ;
-      if (n > plen) then
-         n = 1 ;
-      end
-   end
-   return str ;
-end
 
 function oq.encode_data( pword, name, realm, rid )
   local s = tostring(name) ..",".. tostring(oq.realm_cooked(realm)) ..",".. tostring(rid) ;
@@ -11245,10 +9969,6 @@ function oq.encode_data( pword, name, realm, rid )
   -- sub then reverse
   s = string.gsub( s, ",", ";" ) ;
   s = s:reverse() ;
-
-  -- encrypt
--- current bug with encrypt / decrypt
---  s = oq.encrypt( pword, s ) ;
 
   -- put in cocoon
   return oq.encode64( s ) ;
@@ -11259,10 +9979,6 @@ function oq.decode_data( pword, data )
   -- pull from the cocoon
   local s = oq.decode256( data ) ;
 
-  -- decrypt
--- current bug with encrypt / decrypt
---  s = oq.decrypt( pword, s ) ;
-   
   -- reverse then sub
   s = s:reverse() ;
   s = string.gsub( s, ";", "," ) ;
@@ -12649,7 +11365,6 @@ function oq.procs_init()
   -- all procs
   --
   oq.proc = {} ;
-  oq.proc[ "brb"                ] = oq.on_brb ;
   oq.proc[ "btag"               ] = oq.on_btag ;
   oq.proc[ "btags"              ] = oq.on_btags ;
   oq.proc[ "disband"            ] = oq.on_disband ;
@@ -12713,7 +11428,6 @@ function oq.procs_join_raid()
 
   -- raid required procs
   --
-  oq.proc[ "brb"                ] = oq.on_brb ;
   oq.proc[ "btag"               ] = oq.on_btag ;
   oq.proc[ "enter_bg"           ] = oq.on_enter_bg ;
   oq.proc[ "group_hp"           ] = oq.on_group_hp ;
@@ -12751,7 +11465,6 @@ end
 function oq.procs_no_raid()
   -- clear the associated function for raid-only procs
   --
-  oq.proc[ "brb"                ] = nil ;
   oq.proc[ "btag"               ] = nil ;
   oq.proc[ "enter_bg"           ] = nil ;
   oq.proc[ "group_hp"           ] = nil ;
@@ -13443,16 +12156,6 @@ function oq.on_player_enter_world()
   oq.loaded = true ;
 end
 
-function oq.fmt_time( tm )
-  local nmin, nsec ;
-  if (tm == nil) then
-    return "0:00" ;
-  end
-  nmin = floor( tm / 60) ;
-  nsec = floor( tm % 60) ;
-  return string.format( "%d:%02d", nmin, nsec ) ;  
-end
-
 --------------------------------------------------------------------------
 -- initialization functions & event handlers
 --------------------------------------------------------------------------
@@ -13815,47 +12518,6 @@ function oq.toggle_autojoin_oqgeneral( cb )
   end
 end
 
----------------------------------
--- General (local) functions --
----------------------------------
--- checks if a given value is in an array
--- returns true if it finds the value, false otherwise
-local function checkEntry(t, val)
-  for i, v in ipairs(t) do
-    if v == val then
-      return true
-    end
-  end
-  return false
-end
-
-function oq.is_boss( cId )
-  if (oq.BossID[cId]) then
-    return true ;
-  end
-  return nil ;
-end
-
-function oq.get_group_level_range()
-  local highest = UnitLevel("player") ;
-  local lowest  = UnitLevel("player") ;
-  local nMembers = GetNumGroupMembers() ;
-  for i=1,nMembers-1 do
-    if (IsInRaid()) then
-      highest = max( highest, UnitLevel( "raid".. i )) ;
-      lowest  = min( lowest , UnitLevel( "raid".. i )) ;
-    else
-      highest = max( highest, UnitLevel( "party".. i )) ;
-      lowest  = min( lowest , UnitLevel( "party".. i )) ;
-    end
-  end
-  return lowest, highest ;
-end
-
-
-
-function oq.on_group_roster_update()
-end
 
 -- triggered by bn friends going online/offline
 -- wait a half second to allow the data to populate before pulling
@@ -13874,16 +12536,12 @@ function oq.register_events()
   oq.msg_handler[ "BN_FRIEND_INVITE_ADDED"        ] = oq.on_bn_friend_invite_added ;
   oq.msg_handler[ "BN_SELF_ONLINE"                ] = oq.timer_bn_check_online ;
   oq.msg_handler[ "CHAT_MSG_ADDON"                ] = oq.on_addon_event ;
-  oq.msg_handler[ "CHAT_MSG_BG_SYSTEM_NEUTRAL"    ] = oq.on_bg_neutral_event ;
   oq.msg_handler[ "CHAT_MSG_BN_WHISPER"           ] = oq.on_bn_event ;
   oq.msg_handler[ "CHAT_MSG_CHANNEL"              ] = oq.on_channel_msg ;
   oq.msg_handler[ "CHAT_MSG_PARTY"                ] = oq.on_party_event ;
   oq.msg_handler[ "CHAT_MSG_PARTY_LEADER"         ] = oq.on_party_event ;
   oq.msg_handler[ "CHAT_MSG_RAID"                 ] = oq.on_party_event ;
   oq.msg_handler[ "CHAT_MSG_RAID_LEADER"          ] = oq.on_party_event ;
-  oq.msg_handler[ "PLAYER_EQUIPMENT_CHANGED"      ] = oq.on_equipment_changed ;
-  oq.msg_handler[ "INSPECT_READY"                 ] = oq.on_inspect_ready ;
-  oq.msg_handler[ "SOCKET_INFO_UPDATE"            ] = oq.on_equipment_changed ;
   oq.msg_handler[ "PARTY_INVITE_REQUEST"          ] = oq.on_party_invite_request ;
   oq.msg_handler[ "PARTY_MEMBER_DISABLE"          ] = oq.on_party_member_disable ;
   oq.msg_handler[ "GROUP_ROSTER_UPDATE"           ] = oq.on_party_members_changed ;
@@ -13921,17 +12579,14 @@ function oq.register_events()
   oq.ui:RegisterEvent("CHAT_MSG_PARTY") ;
   oq.ui:RegisterEvent("CHAT_MSG_PARTY_LEADER") ;
   oq.ui:RegisterEvent("CLOSE_WORLD_MAP") ;
-  oq.ui:RegisterEvent("INSPECT_READY") ;
   oq.ui:RegisterEvent("PARTY_INVITE_REQUEST") ;
   oq.ui:RegisterEvent("PARTY_MEMBER_DISABLE") ;
   oq.ui:RegisterEvent("GROUP_ROSTER_UPDATE") ;
 --  oq.ui:RegisterEvent("PARTY_MEMBERS_CHANGED") ;
-  oq.ui:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") ;
   oq.ui:RegisterEvent("PLAYER_ENTERING_WORLD") ;
   oq.ui:RegisterEvent("PLAYER_LOGOUT") ;
   oq.ui:RegisterEvent("PVP_RATED_STATS_UPDATE") ;
   oq.ui:RegisterEvent("ROLE_CHANGED_INFORM") ;
-  oq.ui:RegisterEvent("SOCKET_INFO_UPDATE") ;
   oq.ui:RegisterEvent("WORLD_MAP_UPDATE") ;
   oq.ui:SetScript("OnEvent", oq.on_event ) ;
   if (RegisterAddonMessagePrefix( "OQ" ) ~= true) then
@@ -13944,9 +12599,6 @@ function oq.init_bnet_friends()
   if ((OQ_data ~= nil) and (OQ_data.btag_cache == nil)) then
     OQ_data.btag_cache = tbl.new() ;
   end
-end
-
-function oq.player_died()
 end
 
 function oq.init_locals()
@@ -14043,23 +12695,6 @@ local function printable( ilink )
    return gsub(ilink, "\124", "\124\124");
 end
 
-function oq.the_check()
-  if (player_realid == nil) then
-    oq.get_battle_tag() ;
-    if (player_realid == nil) then
-      return ;
-    end
-  end
-  if (oq.is_banned( player_realid )) then
-    oq._banned = 1 ;
-    oq.process_msg = function() end 
-    oq.remove_all_premades() ;
-    oq.oqgeneral_leave() ;
-  end
-  return 1 ;
-end
-
-
 function oq.HideSafely(f) 
   if not InCombatLockdown() then 
     f:Hide() 
@@ -14081,7 +12716,6 @@ function oq.on_init( now )
   oq.procs_no_raid() ; -- remove in-raid only functions 
   oq.raid_init() ;
   oq.token_list_init() ;
-  oq.utimer_check_init() ;
   oq.my_tok = "C".. oq.token_gen() ;
   oq.make_frame_moveable( oq.ui ) ;
   oq.BossID = LibStub("LibBossIDs-1.0").BossIDs ;
@@ -14136,7 +12770,6 @@ function oq.on_init( now )
   oq.timer( "chk4dead_group"    ,   15, oq.check_for_dead_group          , true ) ;
   oq.timer( "auto_role_check"   ,   15, oq.auto_set_role                 , true ) ;
   oq.timer( "bnet_friend_req"   ,   10, oq.on_bnet_friend_invite         , true ) ;
-  oq.timer( "the_check"         ,    5, oq.the_check                     , true ) ;
   oq.timer( "reset_buttons"     ,    5, oq.normalize_static_button_height, true ) ;
 --  oq.timer( "populate_dtime"    ,    5, oq.populate_dtime                , true ) ;
   oq.timer( "calc_pkt_stats"    ,    1, oq.calc_pkt_stats                , true ) ;
@@ -14399,9 +13032,6 @@ function oq.attempt_group_recovery()
   end
   if (OQ_data.show_premade_ads == nil) then
     OQ_data.show_premade_ads = 0 ; -- off by default; 'sticky' between sessions
-  end
-  if (OQ_data.show_contract_ads == nil) then
-    OQ_data.show_contract_ads = 1 ;
   end
   
   if (oq.raid.enforce_levels == nil) then
