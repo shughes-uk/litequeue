@@ -3443,10 +3443,6 @@ function oq.remove_all_premades()
 end
 
 function oq.remove_dead_premades()
-  if (_inside_bg) then
-    return ;
-  end
-  
   local now = utc_time() ;
   _source = "cleanup" ;
   for i,v in pairs(oq.premades) do
@@ -6000,6 +5996,8 @@ function oq.create_waitlist_item( parent, x, y, cx, cy, token, n_members )
   end
   f.wait_tm = oq.label ( f, x2+10, 2,  70, cy, "00:00" ) ;  x2 = x2 +  50 ;
   f:Show() ;
+
+
   return f ;
 end
 
@@ -11785,9 +11783,6 @@ function oq.recover_premades()
 end
 
 function oq.process_msg( sender, msg )
-  if (msg:find(OQ.DRUNK)) then
-    return ;
-  end
   local v ;
   local i = 0 ;
   for v in string.gmatch(msg, "([^,]+)") do
@@ -11966,15 +11961,6 @@ end
 
 -- TODO: subtract off leader timestamp to show time difference
 --
-
-function oq.on_boss( guid, id, level ) 
-  level = tonumber( level or 0 ) ;
-  id = tonumber(id) ;
-  if (oq.BossID[id]) and (level > 0) then
-    oq._boss_level[id] = level ;
-    oq._boss_guids[id] = guid ;
-  end
-end
 
 function oq.on_queue_tm( g_id, s1, tm1, s2, tm2 ) 
   g_id   = tonumber( g_id ) ;
@@ -12661,6 +12647,38 @@ function oq.HideSafely(f)
   end
 end
 
+function oq.garbage_collect()
+  collectgarbage()
+end
+
+function printTable(list, i)
+
+    local listString = ''
+--~ begin of the list so write the {
+    if not i then
+        listString = listString .. '{'
+    end
+
+    i = i or 1
+    local element = list[i]
+
+--~ it may be the end of the list
+    if not element then
+        return listString .. '}'
+    end
+--~ if the element is a list too call it recursively
+    if(type(element) == 'table') then
+        listString = listString .. printTable(element)
+    else
+        listString = listString .. element
+    end
+
+    return listString .. ', ' .. printTable(list, i + 1)
+
+end
+
+
+
 function oq.on_init( now )
   if (oq._initialized) then
     return ;
@@ -12678,7 +12696,6 @@ function oq.on_init( now )
   oq.token_list_init() ;
   oq.my_tok = "C".. oq.token_gen() ;
   oq.make_frame_moveable( oq.ui ) ;
-  oq.BossID = LibStub("LibBossIDs-1.0").BossIDs ;
 
   player_name       = UnitName("player") ;
   player_guid       = UnitGUID("player") ;
@@ -12734,7 +12751,7 @@ function oq.on_init( now )
 --  oq.timer( "populate_dtime"    ,    5, oq.populate_dtime                , true ) ;
   oq.timer( "calc_pkt_stats"    ,    1, oq.calc_pkt_stats                , true ) ;
   oq.timer( "check_stats"       ,    4, oq.check_stats                   , true ) ;  -- check party and personal stats every 3 seconds; only send if changed
-  
+  oq.timer( "garbage_collect"    ,    30, oq.garbage_collect               , true ) ;
 -- should be no need for this, as any changes to your karma should be waiting for you in your btag friends list
 -- *  except if you're friended to the scorekeeper
 --  oq.timer_oneshot( 15, oq.req_karma, "player" ) ; -- get my current karma rating, could have changed while away
