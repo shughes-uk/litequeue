@@ -31,7 +31,6 @@ local OQSK_HEADER              = "OQSK" ;
 local OQ_NOTIFICATION_CYCLE    = 2 * 60 * 60 ; -- every 2 hrs
 local OQ_VERSION_SWAP_TM       = 24 * 60 * 60 ;  -- daily check for toons that are OQ enabled
 local OQ_ONEDAY                = 24 * 60 * 60 ; 
-local OQ_REALISTIC_MAX_GAMELEN = 8*60*60 ;  -- classic AV no longer exists
 local OQ_MAX_RELAY_REALMS      = 5 ; 
 local OQ_NOEMAIL               = "." ;
 local OQ_OLDBNHEADER           = "[OQ] " ;
@@ -51,24 +50,16 @@ local OQ_SEC_BETWEEN_ADS       = 25 ;
 local OQ_SEC_BETWEEN_PROMO     = 25 ;
 local OQ_BOOKKEEPING_INTERVAL  = 10 ;
 local OQ_BRIEF_INTERVAL        = 30 ;
-local HAILTOTHEKINGBABY        = 3600 ; -- no more then once an hour
 local OQ_MAX_ATOKEN_LIFESPAN   = 120 ; -- 120 seconds before token removed from ATOKEN list
 local OQ_MIN_ATOKEN_RELAY_TM   = 30 ; -- do not relay atokens more then once every 30 seconds
-local OQ_MAX_HONOR_WARNING     = 3600 ;
-local OQ_MAX_HONOR             = 4000 ;
 local OQ_MAX_SUBMIT_ATTEMPTS   = 20 ;
 local OQ_MAX_WAITLIST          = 40 ;
-local OQ_TOTAL_BGS             = 10 ;
-local OQ_MIN_RUNAWAY_TM        = 40 ; 
 local OQ_MIN_CONNECTION        = 20 ;
 local OQ_MIN_BNET_CONNECTIONS  = 10 ;
 local OQ_FINDMESH_CD           = 7 ; -- seconds
 local OQ_CREATEPREMADE_CD      = 5 ; -- seconds
 local OQ_BTAG_SUBMIT_INTERVAL  = 4*24*60*60 ;
-local OQ_DIP_GAP               = 30 ; -- seconds
 local MAX_OQGENERAL_TALKERS    = 20 ;
-local last_runaway             = 0 ;
-local last_stat_tm             = 0 ;
 local my_group                 = 0 ;
 local my_slot                  = 0 ;
 local next_bn_check            = 0 ;
@@ -112,19 +103,12 @@ local _msg_type                = nil ;
 local _msg_id                  = nil ;
 local _oq_note                 = nil ;
 local _oq_msg                  = nil ;
-local _last_grp_stats          = nil ;
 local _dest_realm              = nil ;
 local _core_msg                = nil ;
 local _to_name                 = nil ;
 local _to_realm                = nil ;
 local _from                    = nil ;
-local _lucky_charms            = nil ;
-local _last_lust               = nil ;
 local _last_report             = nil ;
-local _last_tops               = nil ;
-local _last_bg                 = nil ;
-local _last_crc                = nil ;
-local _next_dip                = 0 ;
 local _map_open                = nil ;
 local _ui_open                 = nil ;
 local _oqgeneral_id            = nil ;
@@ -135,9 +119,6 @@ local _toon                    = {} ;
 local _flags                   = nil ;
 local _enemy                   = nil ;
 local _nkbs                    = 0 ;
-local _hailtiny                = 0 ;
-local _next_flag_check         = 0 ;
-local _announcePremades        = nil ;
 local _arg                     = {} ;
 local _opts                    = {} ;
 local _vars                    = {} ;
@@ -147,19 +128,13 @@ local oq_ascii                 = {} ;
 local oq_mime64                = {} ;
 local lead_ticker              = 0 ;
 local OQ_MAX_BNFRIENDS         = 85 ;
-OQ.MAXBOUNTIES                 = 20 ;
 OQ.BNET_CAPB4THECAP            = 100 ; -- blizz increased the cap from 100 to 112 (also fixed the crash.  capb4cap needed?).  
 local _ ; -- throw away (was getting taint warning; what happened blizz?)
 
 if (OQ_toon == nil) then 
   OQ_toon = { last_tm = 0,
               auto_role = 1,
-              class_portrait = 1,
-              shout_kbs = 1,
-              shout_caps = 1,
-              shout_ragequits = 1,
-              say_sapped = 1,
-              who_popped_lust = 1,
+              class_portrait = 1
             } ;
 end
 --[[ OQ_toon used to help save group information if disconnected, reloaded, or quickly logged out
@@ -565,7 +540,6 @@ function oq.usage()
   print( L["  pnow            print the current utc time to party chat"] ) ;
   print( L["  pos             print your current locaiton in the world"] ) ;
   print( L["  purge           purge friends list of OQ added b.net friends"] ) ;
-  print( L["  rage            report the number of rage-quitters (in BG only)"] ) ;
   print( L["  rc              start role check (OQ premade leader only)"] ) ;
   print( L["  refresh         sends out a request to refresh find-premade list"] ) ;
   print( L["  show <opt>      show various information"] ) ;
@@ -582,11 +556,6 @@ function oq.data_reset()
     OQ_toon = { last_tm = 0,
                 auto_role = 1,
                 class_portrait = 1,
-                shout_kbs = 1,
-                shout_caps = 1,
-                shout_ragequits = 1,
-                say_sapped = 1,
-                who_popped_lust = 1,
                 reports = {},
               } ;
     print( "oQueue data reset.  for it to take effect, type /reload" ) ;
