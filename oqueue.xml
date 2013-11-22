@@ -321,7 +321,7 @@
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="OQ_MinimapButton_Icon" file="Interface\AddOns\oqueue\art\oq_button.tga">
+				<Texture name="OQ_MinimapButton_Icon" file="Interface\AddOns\liteQueue\art\oq_button.tga">
 					<Size>
 						<AbsDimension x="30" y="30"/>
 					</Size>

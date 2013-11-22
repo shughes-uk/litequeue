@@ -218,8 +218,6 @@ if (OQ_data == nil) then
     bn_friends = {}, 
     autoaccept_mesh_request = 1,
     ok2submit_tag = 1,
-    show_premade_ads = 0,
-    show_contract_ads = 1,
   } ;
   OQ_data.stats = {
     nGames      = 0 ;
@@ -513,18 +511,9 @@ function oq.toggle_option( opt )
   if (opt == nil) or (opt == "?") then
     print( "oQueue v".. OQUEUE_VERSION .."  build ".. OQ_BUILD .." (".. tostring(OQ.REGION) ..")" ) ;
     print( " usage:  /oq toggle <option>" ) ;
-    print( "   ads          toggle the premade advertisements" ) ;
     print( "   mini         toggle the minimap icon" ) ;    
   elseif (opt == "mini") then 
     oq.toggle_mini() ;
-  elseif (opt == "ads") then
-    if (OQ_data.show_premade_ads == nil) or (OQ_data.show_premade_ads == 0) then
-      OQ_data.show_premade_ads = 1 ;
-      print( "premade advertisements are now ON" ) ;
-    else
-      OQ_data.show_premade_ads = 0 ;
-      print( "premade advertisements are now OFF" ) ;
-    end
   end  
 end
 
@@ -962,14 +951,6 @@ function oq.n_rows(t)
   return n ;
 end
 
-function oq.total_tears()
-  local n = 0 ;
-  for i,v in pairs(OQ_data.tear_cup) do
-    n = n + v ;
-  end
-  return n ;
-end
-
 function oq.n_premades()
   local nShown, nPremades = 0, 0 ;
   if (oq.tab2_raids ~= nil) then
@@ -1004,8 +985,6 @@ function oq.dump_statistics()
   print( " -  regular bg     : ".. tostring(OQ_toon.stats["bg"].nWins or 0) .." - ".. tostring(OQ_toon.stats["bg"].nLosses or 0) .." over ".. tostring(OQ_toon.stats["bg"].nGames or 0) .." games") ;
   print( " -  rated bg       : ".. tostring(OQ_toon.stats["rbg"].nWins or 0) .." - ".. tostring(OQ_toon.stats["rbg"].nLosses or 0) .." over ".. tostring(OQ_toon.stats["rbg"].nGames or 0) .." games" ) ;
   
-  print( "  my_tears         : ".. tostring(oq.total_tears()) ) ;
-
   print( "  my_region        : ".. tostring(OQ.REGION) ) ;
   print( "  my_realmlist     : ".. tostring(GetCVar("realmlist")) ) ;
   print( "  my_realm         : ".. tostring(player_realm)  .." (".. tostring(oq.realm_cooked(player_realm)) ..")" ) ;
@@ -1636,53 +1615,6 @@ function oq.on_world_map_change()
     if (_ui_open) then
       oq.ui:Show() ;
     end
-  end
-end
-
-function oq.report_premades()
-  if (OQ_data.show_premade_ads == 0) then
-    return ;
-  end
-  _announcePremades = true ;
-  local npremades = #oq.tab2_raids ;
-  if (npremades == 0) then
-    return ;
-  end
-end
-
-function oq.announce_new_premade( name, name_change, raid_token )
-  if (OQ_data.show_premade_ads == 0) then
-    return ;
-  end
-  if (not _announcePremades) then
-    return ;
-  end
-
-  -- don't announce if interested in qualified or certain premade types
-  if (raid_token ~= nil) then
-    if (OQ_data.premade_filter_qualified == 1) and (not oq.qualified(raid_token)) then
-      return ;
-    end
-    local p = oq.premades[ raid_token ] ;
-    if (OQ_data.premade_filter_type ~= OQ.TYPE_NONE) and (p.type ~= OQ_data.premade_filter_type) then
-      return ;
-    end
-    if not oq.pass_filter(p) then
-      return ;
-    end
-  end  
-  
-  local premade = oq.premades[ raid_token ] ;
-  if (premade == nil) then
-    return ;
-  end
-  
-  local hlink = "|Hoqueue:".. tostring(raid_token) .."|h".. OQ_DIAMOND_ICON ;
-  local nShown, nPremades = oq.n_premades() ;
-  if (name_change) then
-    print( hlink .."  ".. string.format( OQ.PREMADE_NAMEUPD, nShown, premade.leader, name, premade.bgs ) .."|h" ) ;
-  else
-    print( hlink .."  ".. string.format( OQ.NEW_PREMADE, nShown, premade.leader, name, premade.bgs ) .."|h" ) ;
   end
 end
 
@@ -6561,7 +6493,7 @@ function oq.create_tab1_common( parent )
   oq.tab1_notes:SetTextColor( 0.9, 0.9, 0.9, 1 ) ;
 
   --[[ tag and version ]]--
-  OQFrameHeaderLogo:SetText( OQ.TITLE_LEFT .."".. OQUEUE_VERSION .."".. OQ.TITLE_RIGHT ) ;
+  OQFrameHeaderLogo:SetText( "liteQueue" ) ;
 
   -- ready check
   oq.tab1_readycheck_button = oq.button( parent, 350, parent:GetHeight()-40, 100, 25, OQ.READY_CHK, 
@@ -8988,15 +8920,10 @@ function oq.process_premade_info( raid_tok, raid_name, faction, level_range, ile
     if (is_source == 0) then
       premade.next_advert = now + OQ_SEC_BETWEEN_ADS + random(1,10) ;
     end
-    local is_update = (premade.name ~= raid_name) and (raid_name ~= nil) ;
     premade.has_pword         = has_pword ;
     premade.is_realm_specific = is_realm_specific ;
     oq.on_premade_stats( raid_tok, nMem, is_source, tm_, status, nWait, type_ ) ;
     oq.update_raid_listitem( raid_tok, raid_name, ilevel, resil, mmr, battlegrounds, tm_, status, has_pword, lead_name, pdata_, type_, karma_ ) ;
-    if (is_update) then
-      -- announce premade name change
-      oq.announce_new_premade( raid_name, true, raid_tok ) ;
-    end
     return ;
   end
 
@@ -9044,7 +8971,6 @@ function oq.process_premade_info( raid_tok, raid_name, faction, level_range, ile
   if (raid_tok == oq.raid.raid_token) then
     oq.update_my_premade_line() ;
   end
-  oq.announce_new_premade( raid_name, nil, raid_tok ) ;
 end
 
 function oq.on_premade_stats( raid_token, nMem, is_source, tm, status, nWait, type_ )
@@ -9735,7 +9661,7 @@ function oq.gather_my_stats()
   end
   me.hks      = floor(hks / 1000) ;  
   me.oq_ver   = oq.get_version_id() ;
-  me.tears    = oq.total_tears() ;
+  me.tears    = 0 ;
   me.pvppower = oq.get_pvppower() ;
   me.mmr      = oq.get_mmr() ;
   
@@ -10301,7 +10227,7 @@ function oq.encode_my_stats( flags, xflags, charm, s1, s2 )
     s = s .."".. oq.encode_mime64_3digit( oq.get_pvppower() ) ;
     s = s .."".. oq.encode_mime64_3digit( bg_stats.nWins ) ;
     s = s .."".. oq.encode_mime64_3digit( bg_stats.nLosses ) ;
-    s = s .."".. oq.encode_mime64_3digit( oq.total_tears() ) ; -- the only tears that count are those of your enemy; rbgs could be same faction
+    s = s .."".. oq.encode_mime64_3digit( 0 ) ; -- the only tears that count are those of your enemy; rbgs could be same faction
     s = s .."".. oq.encode_mime64_2digit( oq.get_best_mmr(oq.raid.type) ) ; -- rbg rating
     s = s .."".. oq.encode_mime64_2digit( oq.get_hks() ) ; -- total hks
     s = s .."".. s1 ;
@@ -12565,7 +12491,6 @@ function oq.init_locals()
   end
   oq._hyperlinks = tbl.new() ;
   oq._hyperlinks["btag"    ] = oq.onHyperlink_btag ;
-  oq._hyperlinks["contract"] = oq.onHyperlink_contract ;
   oq._hyperlinks["log"     ] = oq.onHyperlink_log ;
   oq._hyperlinks["oqueue"  ] = oq.onHyperlink_oqueue ;
   
@@ -13006,9 +12931,6 @@ function oq.attempt_group_recovery()
   end
   if (OQ_toon.MinimapPos == nil) then
     OQ_toon.MinimapPos = 0 ;
-  end
-  if (OQ_data.show_premade_ads == nil) then
-    OQ_data.show_premade_ads = 0 ; -- off by default; 'sticky' between sessions
   end
   
   if (oq.raid.enforce_levels == nil) then

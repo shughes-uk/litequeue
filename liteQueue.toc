@@ -1,10 +1,10 @@
-## Title: oQueue
-## Version: 1.6.1
+## Title: liteQueue
+## Version: 0.1
 ## Interface: 50400
-## Author: Tiny of the Zerg
-## Notes: Oath's premade finder using social mesh networking
+## Author: Tiny of the Zerg & Mnu
+## Notes: Butchered version of oQueue
 ## X-Category: PvP
-## X-Website: http://www.solidice.com/oqueue
+## X-Website: none
 ## DefaultState: enabled
 ## SavedVariables: OQ_data
 ## SavedVariablesPerCharacter: OQ_toon
@@ -25,7 +25,7 @@ region\realms.eu.lua
 
 Libs\LibStub\LibStub.lua
 
-oqueue.lua
+liteQueue.lua
 oqueue_class_portraits.lua
 oqueue_dialogs.lua
 oqueue_filters.lua
@@ -34,6 +34,5 @@ oqueue_stats.lua
 oqueue_timers.lua
 oqueue_tooltips.lua
 oqueue_ui_tools.lua
-oqueue_dsa.lua
 
 oqueue.xml

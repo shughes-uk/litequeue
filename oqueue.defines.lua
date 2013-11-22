@@ -14,9 +14,9 @@ local addonName, OQ = ... ;
 OQ.FONT = "Fonts\\FRIZQT__.TTF" ;
 if (string.sub(GetCVar("realmList"),1,2) == "eu") then
   -- force to unicode supported font, allowing cyrillic fonts to render properly
-  OQ.FONT = "Interface\\Addons\\oqueue\\fonts\\ARIALB.TTF" ;
+  OQ.FONT = "Interface\\Addons\\liteQueue\\fonts\\ARIALB.TTF" ;
 end
-OQ.FONT_FIXED = "Interface\\Addons\\oqueue\\fonts\\lucida_console.ttf" ;
+OQ.FONT_FIXED = "Interface\\Addons\\liteQueue\\fonts\\lucida_console.ttf" ;
 OQ.BOUNTY_UP  = "INTERFACE/BUTTONS/UI-MICROBUTTON-SOCIALS-UP" ;
 OQ.BOUNTY_DN  = "INTERFACE/BUTTONS/UI-MICROBUTTON-SOCIALS-DOWN" ;
 OQ.NOBOUNTY_A = "INTERFACE/BUTTONS/UI-MicroButton-Guild-Disabled-Alliance" ;
@@ -308,18 +308,5 @@ OQ.QUEUE_STATUS = { ["none"   ] = "0",
                     ["4"      ] = "error",
                   } ;
 
-OQ.gbl = { ["tts#1959"         ] = 1,  -- OQ exploiter
-           ["humiliation#1231" ] = 1,  -- nazi symbol in OQ names
-           ["peaceandlove#1473"] = 1,  -- bandit
-           ["mokkthemadd#1462" ] = 1,  -- flamed out, hard
-           ["fr0st#1118"       ] = 1,  -- n-word to scorekeeper
-           ["drunkhobo15#1211" ] = 1,  -- exploit/hack
-           ["bradley#1957"     ] = 1,  -- spamming the scorekeeper, douchery
-           ["thetcer#1446"     ] = 1,  -- OQ exploiter
-           ["pawnstar#1571"    ] = 1,  -- exploit helm; 'f-you f*ggot' - chumlee
-           ["cory#1801"        ] = 1,  -- OQ exploiter; gold dragon
-           ["adolph#1897"      ] = 1,  -- douchery; toolbag; RL name + c-word to insult player
-           ["flucz#1635"       ] = 1,  -- douchery; "who the f* are you; n***a off my friends list;b*tch;dont pop enough molly for me;pussy;now;im gonna go f* yur betch;an pop molly" ... that's swell.  have a nice day
-           ["cscird#1889"      ] = 1,  -- OQ exploiter; gold dragon
-         } ;
+OQ.gbl = { } ;
 
