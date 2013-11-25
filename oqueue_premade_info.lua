@@ -96,6 +96,18 @@ OQ._difficulty = { [ 1] = { n =0.25, desc = "5 player"           },
                    [11] = { n =   2, desc = "scenario (heroic)" },
                    [12] = { n =   1, desc = "scenario" },
                  } ;
+
+function oq.strrep(value, insert, place)
+  if (value == nil) then
+    return insert ;
+  end
+  if place == nil or (place > #value) then
+    place = string.len(value)+1
+  elseif (place <= 0) then
+    place = 1 ;
+  end
+  return string.sub( value, 1, place-1) .. insert .. string.sub( value, place+1, -1 ) ;
+end
                  
 function oq.has_completed( achieve_id )
   return (achieve_id ~= nil) and (achieve_id > 0) and (GetStatistic( achieve_id ) ~= "--") ;

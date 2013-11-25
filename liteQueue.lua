@@ -5450,7 +5450,7 @@ function oq.create_challenge_group( parent, x_, y_, ix, iy, label_cx, title, gro
   f.slots = tbl.new() ;
   local x = 10 ;
   for i=1,5 do
-    f.slots[i] = oq.create_challenge_dot( f, x, 5, cx, cy ) ;
+    f.slots[i] = oq.create_class_dot( f, x, 5, cx, cy ) ;
     f.slots[i].gid  = group_id ;
     f.slots[i].slot = i ;
     x = x + cx + 10 ;
@@ -6404,7 +6404,7 @@ function oq.create_tab1_challenge( parent )
   cy = 50 ;
   label_cx = 150 ;
   
-  oq.challenge_group = oq.create_challenge_group( parent, x, y, parent:GetWidth()-x*2, 250, label_cx, title, group_id ) ;
+  oq.raid_group = oq.create_group( parent, x, y, parent:GetWidth()-x*2, 250, label_cx, title, group_id ) ;
 end
 
 
@@ -6531,7 +6531,7 @@ function oq.onShow_tab1()
   oq.ui.scenario_frame :Hide() ;  
 
   if (oq.raid.type == OQ.TYPE_CHALLENGE) then
-    oq.ui.challenge_frame:Show() ;
+    oq.ui.raid_frame:Show() ;
   elseif (oq.raid.type == OQ.TYPE_DUNGEON) then
     oq.ui.dungeon_frame:Show() ;
   elseif (oq.raid.type == OQ.TYPE_RAID) then
@@ -6539,7 +6539,7 @@ function oq.onShow_tab1()
   elseif (oq.raid.type == OQ.TYPE_SCENARIO) then
     oq.ui.scenario_frame:Show() ;
   elseif (oq.raid.type == OQ.TYPE_QUESTS) then
-    oq.ui.challenge_frame:Show() ;
+    oq.ui.raid_frame:Show() ;
   end
 end
 
@@ -8656,21 +8656,6 @@ function oq.get_role_icon( n )
 end
 
 function oq.nMaxGroups()
-  if (oq.raid.type == OQ.TYPE_RBG) then
-    return 2 ;
-  elseif (oq.raid.type == OQ.TYPE_ARENA) then
-    return 1 ;
-  elseif (oq.raid.type == OQ.TYPE_SCENARIO) then
-    return 1 ;
-  elseif (oq.raid.type == OQ.TYPE_DUNGEON) then
-    return 1 ;
-  elseif (oq.raid.type == OQ.TYPE_CHALLENGE) then
-    return 1 ;
-  elseif (oq.raid.type == OQ.TYPE_QUESTS) then
-    return 1 ;
-  elseif (oq.raid.type == OQ.TYPE_LADDER) then
-    return 1 ;
-  end
   return 8 ;
 end
 
@@ -9472,10 +9457,10 @@ function oq.set_textures( g_id, slot )
     oq.set_textures_cell( m, oq.dungeon_group.slots[slot] ) ; -- dungeon
   end
   if (oq.raid.type == OQ.TYPE_CHALLENGE) then
-    oq.set_textures_cell( m, oq.challenge_group.slots[slot] ) ; -- challenge
+    oq.set_textures_cell( m, oq.raid_group[g_id].slots[slot] ) ; -- challenge
   end
   if (oq.raid.type == OQ.TYPE_QUESTS) then
-    oq.set_textures_cell( m, oq.challenge_group.slots[slot] ) ; -- challenge
+    oq.set_textures_cell( m, oq.raid_group[g_id].slots[slot] ) ; -- challenge
   end
   if (oq.raid.type == OQ.TYPE_SCENARIO) then
     oq.set_textures_cell( m, oq.scenario_group.slots[slot]   ) ; -- scenario
@@ -9494,12 +9479,6 @@ end
 
 function oq.set_textures_cell( m, cell )
   if (m == nil) or (cell == nil) or (cell.texture == nil) then
-    if (cell ~= nil) and (cell.texture ~= nil) and ((oq.raid.type == OQ.TYPE_DUNGEON) or 
-       (oq.raid.type == OQ.TYPE_SCENARIO) or (oq.raid.type == OQ.TYPE_ARENA) or (oq.raid.type == OQ.TYPE_CHALLENGE) or 
-       (oq.raid.type == OQ.TYPE_QUESTS)) then
-      cell.texture:SetPoint("TOPLEFT"    , cell.model_frame,"TOPLEFT"    ,  2, -3) ;
-      cell.texture:SetPoint("BOTTOMRIGHT", cell.model_frame,"BOTTOMRIGHT", -2,  3) ;
-    end
     return ;
   end
   local color = OQ.CLASS_COLORS["XX"] ;
@@ -9517,10 +9496,6 @@ function oq.set_textures_cell( m, cell )
     cell.status:SetTexture( nil ) ;
     cell.class :SetTexture( nil ) ;
     cell.role  :SetTexture( nil ) ;
-    if (cell.texture ~= nil) and (oq.is_dungeon_premade() or (oq.raid.type == OQ.TYPE_ARENA)) then
-      cell.texture:SetPoint("TOPLEFT", cell.model_frame,"TOPLEFT", 2, -3) ;
-      cell.texture:SetPoint("BOTTOMRIGHT", cell.model_frame,"BOTTOMRIGHT", -2, 3) ;
-    end
     return ;
   end
   -- set overlap state
@@ -9555,7 +9530,6 @@ function oq.set_textures_cell( m, cell )
   else
     cell.status:SetTexture( nil ) ;
   end
-
   -- set role
   if (oq.is_set( m.flags, OQ.FLAG_TANK )) then
     cell.role:SetTexture( "Interface\\LFGFRAME\\UI-LFG-ICON-PORTRAITROLES" ) ;
@@ -9569,6 +9543,7 @@ function oq.set_textures_cell( m, cell )
   else
     cell.role:SetTexture( nil ) ; 
   end
+
   
 end
 
@@ -12220,6 +12195,7 @@ function oq.on_party_members_changed()
   else
     oq.force_stats() ;
   end
+  oq.refresh_textures();
 end
 
 function oq.on_party_member_disable( party_member )
