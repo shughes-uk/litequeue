@@ -5724,18 +5724,9 @@ function oq.create_raid_listing( parent, x, y, cx, cy, token, type )
   d:Show() ;
   f.dragon = d ;
 
-  f.leader    = oq.label  ( f, x2, 2,  90, cy, ""  ) ;  x2 = x2 +  90 ;
-  f.leader:SetFont( OQ.FONT, 11, "" ) ;
-  f.leader:SetTextColor( 0.9, 0.9, 0.9 ) ;
-  
-  f.levels    = oq.label  ( f, x2, 2,  45, cy, ""  ) ;  x2 = x2 +  45 + 2 ; -- keep these 2 lines balanced to line up
-  f.min_ilvl  = oq.label  ( f, x2, 2,  40, cy, "-" ) ;  x2 = x2 +  40 - 2 ; -- keep these 2 lines balanced to line up
-  f.min_resil = oq.label  ( f, x2, 2,2*48, cy, "-" ) ;  x2 = x2 +  45 ; -- extra wide for dungeon icons
-  f.min_mmr   = oq.label  ( f, x2, 2,  45, cy, "-" ) ;  x2 = x2 +  45 ;
-  f.zones     = oq.label  ( f, x2, 2, 140, cy, ""  ) ;  x2 = x2 + 140 ;
-  f.zones:SetTextColor( 0.9, 0.9, 0.9 ) ;
-  f.zones:SetFont( OQ.FONT, 10, "" ) ;
-  f.has_pword = oq.texture( f, x2, 2,  24, 38, nil ) ;  x2 = x2 + 22 ;
+  --f.leader    = oq.label  ( f, x2, 2,  90, cy, ""  ) ;  x2 = x2 +  90 ;
+  --f.leader:SetFont( OQ.FONT, 11, "" ) ;
+  --f.leader:SetTextColor( 0.9, 0.9, 0.9 ) ;
   f.req_but   = oq.button ( f, x2, 2,  75, cy-2, OQ.BUT_WAITLIST, 
                                               function(self) 
                                                 oq.get_battle_tag() ;
@@ -5745,6 +5736,24 @@ function oq.create_raid_listing( parent, x, y, cx, cy, token, type )
                                                   oq.check_and_send_request( self:GetParent().token ) ;
                                                 end
                                               end ) ;
+
+  f.levels    = oq.label  ( f, x2, 2,  45, cy, ""  ) ;  x2 = x2 +  45 + 2 ; -- keep these 2 lines balanced to line up
+  f.min_ilvl  = oq.label  ( f, x2, 2,  40, cy, "-" ) ;  x2 = x2 +  40 - 2 ; -- keep these 2 lines balanced to line up
+  f.min_resil = oq.label  ( f, x2, 2,2*48, cy, "-" ) ;  x2 = x2 +  45 ; -- extra wide for dungeon icons
+  f.min_mmr   = oq.label  ( f, x2, 2,  45, cy, "-" ) ;  x2 = x2 +  45 ;
+  f.zones     = oq.label  ( f, x2, 2, 140, cy, ""  ) ;  x2 = x2 + 140 ;
+  f.zones:SetTextColor( 0.9, 0.9, 0.9 ) ;
+  f.zones:SetFont( OQ.FONT, 10, "" ) ;
+  f.has_pword = oq.texture( f, x2, 2,  24, 38, nil ) ;  x2 = x2 + 22 ;
+  --f.req_but   = oq.button ( f, x2, 2,  75, cy-2, OQ.BUT_WAITLIST, 
+   --                                           function(self) 
+     --                                           oq.get_battle_tag() ;
+       --                                         if ((player_realid == nil) or (player_realid == "")) then
+         --                                         return ;
+           --                                     else
+             --                                     oq.check_and_send_request( self:GetParent().token ) ;
+               --                                 end
+                 --                             end ) ;
   x2 = x2 +  80 ;
   f.unlist_but = oq.button( f, x2, 2,  24, cy-2, "x", 
                                               function(self,button,down) 
@@ -8700,8 +8709,8 @@ function oq.update_raid_listitem( raid_tok, raid_name, ilevel, resil, mmr, battl
   status = tonumber(status) ;
   for i,f in pairs( oq.tab2_raids ) do
     if (f.raid_token == raid_tok) then
-      f.leader   :SetText( lead_name ) ;
-      f.leader   :SetTextColor( 1,1,1 ) ;
+      --f.leader   :SetText( lead_name ) ;
+      --f.leader   :SetTextColor( 1,1,1 ) ;
 
       f.raid_name:SetText( raid_name ) ;
       f.min_ilvl :SetText( ilevel ) ;
@@ -8915,7 +8924,7 @@ function oq.process_premade_info( raid_tok, raid_name, faction, level_range, ile
   npremades = npremades + 1 ;
         
   local f   = oq.create_raid_listing( oq.tab2_list, x, y, oq.tab2_list:GetWidth() - 2*x, cy, raid_tok, type_ ) ;
-  f.leader   :SetText( lead_name ) ;
+  --f.leader   :SetText( lead_name ) ;
   f.levels   :SetText( level_range ) ;
   f.raid_token = raid_tok ;
   table.insert( oq.tab2_raids, f ) ;
