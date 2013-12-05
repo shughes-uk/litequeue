@@ -35,36 +35,6 @@ function oq.save_position( f )
   end
 end
 
-function oq.make_frame_moveable( f )
-  f:SetMovable(true)
-  f:EnableMouse(true)
-  f:RegisterForDrag("LeftButton")
-  f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", oq.StopMovingOrSizing)
-  f:SetScript("OnMouseDown", function(self, button)
-    if (button == "LeftButton") and (not self.isMoving) then
-     self:StartMoving();
-     self.isMoving = true;
-    elseif (button == "LeftButton") then
-      -- try to recover from odd double left-down with no left-up
-      self:StopMovingOrSizing();
-      self.isMoving = false;
-    end
-  end)
-  f:SetScript("OnMouseUp", function(self, button)
-    if (button == "LeftButton") and self.isMoving then
-      if (f._save_position) then f._save_position( f ) ; end
-      self:StopMovingOrSizing();
-      self.isMoving = false;
-    end
-  end)
-  f:SetScript("OnHide", function(self)
-    if ( self.isMoving ) then
-    self:StopMovingOrSizing();
-    self.isMoving = false;
-    end
-  end)
-end
 
 function oq.moveto( f, x, y ) 
 f.__x = x ;

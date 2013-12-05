@@ -12565,7 +12565,7 @@ function oq.on_init( now )
   oq.raid_init() ;
   oq.token_list_init() ;
   oq.my_tok = "C".. oq.token_gen() ;
-  oq.make_frame_moveable( oq.ui ) ;
+
 
   player_name       = UnitName("player") ;
   player_guid       = UnitGUID("player") ;
